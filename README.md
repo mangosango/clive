@@ -23,3 +23,4 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) is installe
 ## 📋 Todo
 - Option to only post clips from a certain channel.
 - Having a UI or hosting this somewhere would be nice.
+- Set the `DISCORD_WEBHOOK_URL` to pull from an evar or something.
