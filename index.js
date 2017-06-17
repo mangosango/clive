@@ -1,4 +1,5 @@
-const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/YOUR_DISCORD/WEBHOOK_URL_HERE";
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "YOUR_DISCORD_WEBHOOK_URL_HERE";
+const TWITCH_CHANNELS = process.env.TWITCH_CHANNELS.split(' ') || ['#YOUR_TWITCH_CHANNEL_HERE'];
 
 var request = require('request');
 var tmi = require("tmi.js");
@@ -10,7 +11,7 @@ var options = {
   connection: {
     reconnect: true
   },
-  channels: ["#mrchowderclam"]
+  channels: TWITCH_CHANNELS
 };
 
 var client = new tmi.client(options);
@@ -27,7 +28,7 @@ client.on("message", function (channel, userstate, message, self) {
     case "chat":
       // console.log(userstate);
       if (message.indexOf("clips.twitch.tv/") !== -1) {
-        postThing(`${userstate["display-name"]} posted a clip: ${message}`);
+        postThing(`**${userstate["display-name"]}** posted a clip: ${message}`);
       }
       break;
     case "whisper":
@@ -48,8 +49,6 @@ function postThing(val) {
     { json:
       {
         content: val,
-        username: "Clive",
-        avatar_url: "http://i.imgur.com/9s3TBNv.png",
       }
     },
     function (error, response, body) {

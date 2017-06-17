@@ -1,0 +1,15 @@
+[Unit]
+Description=Clive the clipbot
+
+[Service]
+ExecStart=/usr/bin/node /path/to/your/cloned/repo/clive/index.js
+Restart=always
+User=nobody
+Group=nobody
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+Environment=DISCORD_WEBHOOK_URL=https://discordapp.com/api/webhooks/YOUR_DISCORD/WEBHOOK_URL_HERE
+Environment=TWITCH_CHANNELS="#a_twitch_channel #another_twitch_channel"
+
+[Install]
+WantedBy=multi-user.target
