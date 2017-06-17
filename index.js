@@ -49,6 +49,8 @@ function postThing(val) {
     { json:
       {
         content: val,
+        username: "Clive",
+        avatar_url: "http://i.imgur.com/9s3TBNv.png",
       }
     },
     function (error, response, body) {
