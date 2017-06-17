@@ -1,0 +1,14 @@
+{
+	"name": "clappybot",
+	"version": "1.0.0",
+	"description": "bot that posts clips posted to twitch chat to discord",
+	"license": "ISC",
+	"main": "index.js",
+	"scripts": {
+    "start": "node index.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"dependencies": {
+		"tmi.js": "^1.2.1"
+	}
+}
