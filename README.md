@@ -1,7 +1,7 @@
 <img src="http://i.imgur.com/M9TvvSy.png" alt="clive-mascot" width=64px />
 
 ## ☝️ That's Clive
-He's a very simple bot that monitors Twitch chat for clips and auto-posts them to Discord. He runs on a diet of [nodejs](https://nodejs.org/en/) and [tmi.js](https://docs.tmijs.org/v1.2.1/index.html). He needs to live on a server (Like an [Amazon EC2 instance](https://aws.amazon.com/getting-started/tutorials/launch-a-virtual-machine/)). I use a [Pocket C.H.I.P](https://getchip.com/pages/pocketchip) to host Clive.
+He's a very simple bot that monitors Twitch chat for clips and auto-posts them to Discord. He runs on a diet of [nodejs](https://nodejs.org/en/) and [tmi.js](https://docs.tmijs.org/v1.2.1/index.html). He needs to live on a server (Like an [Amazon EC2 instance](https://aws.amazon.com/getting-started/tutorials/launch-a-virtual-machine/)). I use a [Pocket C.H.I.P.](https://getchip.com/pages/pocketchip) to host Clive.
 
 **Some assembly required (it helps to know code!).**
 
@@ -21,7 +21,16 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) is installe
 11. Profit.
 
 ## 📋 Todo
-- Option to only post clips from a certain channel.
+- Option to only send clips of a certain channel or channels.
+- Option to only send clips posted by mods or subs.
 - Having a UI or hosting this somewhere would be nice.
 - Set the `DISCORD_WEBHOOK_URL` to pull from an evar or something.
 - Make clive an actual Discord bot, but that would require actual work lol.
+- MFW the Readme is bigger than the app LUL
+
+## 👯 Contributing
+1. Create your own feature branch (using `git checkout -b ...` or whatever you want to use).
+2. Write some nice code. Commit it! Push it!
+3. Use Github's excellent pull request feature to submit a PR.
+4. Someone will review your PR and merge to master! 
+5. Yay.
