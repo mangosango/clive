@@ -49,7 +49,7 @@ function postThing(val) {
       {
         content: val,
         username: "Clive",
-        avatar_url: "http://i.imgur.com/raMNljV.png",
+        avatar_url: "http://i.imgur.com/9s3TBNv.png",
       }
     },
     function (error, response, body) {
