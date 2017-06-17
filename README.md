@@ -3,7 +3,7 @@
 ## ☝️ That's Clive
 He's a very simple bot that monitors Twitch chat for clips and auto-posts them to Discord. He runs on a diet of [nodejs](https://nodejs.org/en/) and [tmi.js](https://docs.tmijs.org/v1.2.1/index.html). He needs to live on a server (Like an [Amazon EC2 instance](https://aws.amazon.com/getting-started/tutorials/launch-a-virtual-machine/)). I use a [Pocket C.H.I.P.](https://getchip.com/pages/pocketchip) to host Clive.
 
-**Some assembly required (it helps to know code!).**
+**Some assembly required (it helps to be familiar with node).**
 
 ## 🤖 Instructions (OSX/Linux)
 Before starting, make sure [nodejs](https://nodejs.org/en/download/) is installed. You will also need a [webhook](https://support.discordapp.com/hc/en-us/articles/228383668-Intro-to-Webhooks) for the Discord channel where these clips will be posted.
