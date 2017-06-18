@@ -20,7 +20,7 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) is installe
 10. ???
 11. Profit.
 
-** If you prefer to use environment variables, you can set *`DISCORD_WEBHOOK_URL`* and *`TWITCH_CHANNELS`. `TWITCH_CHANNELS`* should be a space limited set of *`#channel_name`*s. You can set these in the provided *`clive.service`* file, or by using the *`export`* command. Here's a [short guide](http://blog.mdda.net/oss/2015/02/16/forever-node-service-systemd). on how to use systemd files*
+\* *If you prefer to use environment variables, you can set `DISCORD_WEBHOOK_URL` and `TWITCH_CHANNELS`. `TWITCH_CHANNELS` *should be a space limited set of `#channel_name`s. You can set these in the provided `clive.service` file, or by using the `export` command. Here's a [short guide](http://blog.mdda.net/oss/2015/02/16/forever-node-service-systemd). on how to use systemd.*
 
 ## 📋 Todo
 - Option to only send clips of a certain channel or channels.
