@@ -14,13 +14,13 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) is installe
 4. Run `npm install`
 5. Open `index.js` in a text editor (like [atom](https://atom.io/)).
 6. Modify `... || YOUR_DISCORD_WEBHOOK_URL_HERE` to your [Discord webhook URL](http://i.imgur.com/sEUCxct.png) between the quotes.*
-7. Modify `... || ["#YOUR_TWITCH_CHANNEL_HERE"]` to your Twitch channel. Keep the `#` in front of the channel. For example, if you wanted to watch for clips in `Monstercat`'s chat, you would use `... || ["#monstercat"]`. If you wanted to monitor multiple channels, you would use `... || ["#monstercat", "#mrchowderclam"]`.*
+7. Modify `... || ["YOUR_TWITCH_CHANNEL_HERE"]` to your Twitch channel. For example, if you wanted to watch for clips in `Monstercat`'s chat, you would use `... || ["monstercat"]`. If you wanted to monitor multiple channels, you would use `... || ["monstercat", "mrchowderclam"]`.*
 8. Save `index.js`.
 9. In terminal, run `npm start`.
 10. ???
 11. Profit.
 
-\* *If you prefer to use environment variables, you can set `DISCORD_WEBHOOK_URL` and `TWITCH_CHANNELS`. `TWITCH_CHANNELS` should be a space limited set of `#channel_name`s. You can set these in the provided `clive.service` file, or by using the `export` command. Here's a [short guide](http://blog.mdda.net/oss/2015/02/16/forever-node-service-systemd). on how to use systemd.*
+\* *If you prefer to use environment variables, you can set `DISCORD_WEBHOOK_URL` and `TWITCH_CHANNELS`. `TWITCH_CHANNELS` should be a space limited set of `channel_name`s. You can set these in the provided `clive.service` file, or by using the `export` command. Here's a [short guide](http://blog.mdda.net/oss/2015/02/16/forever-node-service-systemd). on how to use systemd.*
 
 ## 📋 Todo
 - Option to only send clips of a certain channel or channels.

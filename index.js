@@ -1,7 +1,15 @@
 const _ = require('lodash');
 
 const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL') || "YOUR_DISCORD_WEBHOOK_URL_HERE";
-const TWITCH_CHANNELS = _.split(_.get(process, 'env.TWITCH_CHANNELS'), ' ') || ['#YOUR_TWITCH_CHANNEL_HERE'];
+let channelArray = _.get(process, 'env.TWITCH_CHANNELS');
+if (channelArray) {
+	channelArray = _.split(channelArray, ' ');
+} else {
+	channelArray = ['YOUR_TWITCH_CHANNEL_HERE'];
+}
+const TWITCH_CHANNELS = channelArray.map(function (channel) {
+	return `#${channel}`;
+});
 
 var request = require('request');
 var tmi = require("tmi.js");
