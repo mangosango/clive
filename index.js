@@ -1,5 +1,7 @@
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "YOUR_DISCORD_WEBHOOK_URL_HERE";
-const TWITCH_CHANNELS = process.env.TWITCH_CHANNELS.split(' ') || ['#YOUR_TWITCH_CHANNEL_HERE'];
+const _ = require('lodash');
+
+const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL') || "YOUR_DISCORD_WEBHOOK_URL_HERE";
+const TWITCH_CHANNELS = _.split(_.get(process, 'env.TWITCH_CHANNELS'), ' ') || ['#YOUR_TWITCH_CHANNEL_HERE'];
 
 var request = require('request');
 var tmi = require("tmi.js");
