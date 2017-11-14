@@ -58,12 +58,12 @@ client.on("message", function (channel, userstate, message, self) {
 // Connect the client to the server..
 client.connect();
 
-function postDiscordMessage(val) {
+function postDiscordMessage(msg) {
   request.post(
     DISCORD_WEBHOOK_URL,
     { json:
       {
-        content: val,
+        content: msg,
         username: "Clive",
         avatar_url: "http://i.imgur.com/9s3TBNv.png",
       }
