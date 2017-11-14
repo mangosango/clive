@@ -43,7 +43,8 @@ client.on("message", function (channel, userstate, message, self) {
 	// Delay the message to ensure its finished being genreated by Twitch
         setTimeout(
           postDiscordMessage(`**@${userstate["display-name"]}** posted a clip: ${message}`),
-	  DISCORD_POST_DELAY);
+	  DISCORD_POST_DELAY
+	);
       }
       break;
     case "whisper":
