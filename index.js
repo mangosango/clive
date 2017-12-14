@@ -1,4 +1,4 @@
-'require strict';
+'use strict';
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').load();
 }
@@ -13,8 +13,8 @@ const DISCORD_WEBHOOK_URL =
 const TWITCH_CHANNELS = generateChannelList(
   _.get(process, 'env.TWITCH_CHANNELS') || ['TwitchChannel AnotherChannel'],
 );
-const MODS_ONLY = _.get(process, 'env.MODS_ONLY') == 'true' || false;
-const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY') == 'true' || false;
+const MODS_ONLY = _.get(process, 'env.MODS_ONLY') === 'true' || false;
+const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY') === 'true' || false;
 
 winston.log('info', 'Config settings:\n', {
   DISCORD_WEBHOOK_URL,
@@ -25,7 +25,7 @@ winston.log('info', 'Config settings:\n', {
 
 const options = {
   options: {
-    debug: _.get(process, 'env.LOG_LEVEL') == 'debug' || false,
+    debug: _.get(process, 'env.LOG_LEVEL') === 'debug' || false,
   },
   connection: {
     reconnect: true,
@@ -35,7 +35,7 @@ const options = {
 
 const client = new tmi.client(options);
 
-client.on('message', function(channel, userstate, message, self) {
+client.on('message', (channel, userstate, message, self) => {
   winston.log('debug', 'New message');
   winston.log('debug', 'Channel: ', channel);
   winston.log('debug', 'Userstate: ', userstate);
@@ -89,18 +89,21 @@ function postToDiscord(val) {
         avatar_url: 'http://i.imgur.com/9s3TBNv.png',
       },
     },
-    function(error, response, body) {
-      if (!error && response.statusCode == 200) {
-        winston.log('error', 'Error posting to Discord', body);
+    (error, response, body) => {
+      if (error) {
+        winston.log('error', 'Error posting to Discord', response, body);
+      } else if (response.statusCode === 200) {
+        winston.log('info', body);
       }
     },
   );
 }
 
+// Takes space-separated string of twitch channels parses them, adds a # prefix, and puts them into an array
 function generateChannelList(channelsString) {
   let channelArray = _.split(channelsString, ' ');
 
-  return channelArray.map(function(channel) {
+  return channelArray.map(channel => {
     return `#${channel}`;
   });
 }
