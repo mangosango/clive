@@ -8,6 +8,7 @@ User=nobody
 Group=nobody
 Environment=PATH=/usr/bin:/usr/local/bin
 Environment=NODE_ENV=production
+Environment=LOG_LEVEL=error
 Environment=DISCORD_WEBHOOK_URL=https://discordapp.com/api/webhooks/YOUR_DISCORD/WEBHOOK_URL_HERE
 Environment="TWITCH_CHANNELS=a_twitch_channel another_twitch_channel"
 Environment=MODS_ONLY=false
