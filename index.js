@@ -1,3 +1,6 @@
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').load();
+}
 const _ = require('lodash');
 const request = require('request');
 const tmi = require('tmi.js');
