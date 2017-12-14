@@ -11,10 +11,10 @@ const TWITCH_CHANNELS = channelArray.map(function (channel) {
 	return `#${channel}`;
 });
 
-var request = require('request');
-var tmi = require("tmi.js");
+const request = require('request');
+const tmi = require("tmi.js");
 
-var options = {
+const options = {
   options: {
     debug: false
   },
@@ -24,7 +24,7 @@ var options = {
   channels: TWITCH_CHANNELS
 };
 
-var client = new tmi.client(options);
+const client = new tmi.client(options);
 
 client.on("message", function (channel, userstate, message, self) {
   // Don't listen to my own messages..
