@@ -4,6 +4,9 @@ const tmi = require("tmi.js");
 
 const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL') || "YOUR_DISCORD_WEBHOOK_URL_HERE";
 const TWITCH_CHANNELS = generateChannelList(_.get(process, 'env.TWITCH_CHANNELS') || ['TwitchChannel AnotherChannel']);
+const MODS_ONLY = _.get(process, 'env.MODS_ONLY') == 'true' || false;
+const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY') == 'true' || false;
+
 
 const options = {
   options: {
@@ -20,6 +23,10 @@ const client = new tmi.client(options);
 client.on("message", function (channel, userstate, message, self) {
   // Don't listen to my own messages..
   if (self) return;
+  // Mods only
+  if (MODS_ONLY && !userstate['mod']) return;
+  // Subs only
+  if (SUBS_ONLY && !userstate['subscriber']) return;
 
   // Handle different message types..
   switch(userstate["message-type"]) {

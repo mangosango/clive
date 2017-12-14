@@ -10,6 +10,8 @@ Environment=PATH=/usr/bin:/usr/local/bin
 Environment=NODE_ENV=production
 Environment=DISCORD_WEBHOOK_URL=https://discordapp.com/api/webhooks/YOUR_DISCORD/WEBHOOK_URL_HERE
 Environment="TWITCH_CHANNELS=a_twitch_channel another_twitch_channel"
+Environment=MODS_ONLY=false
+Environmnet=SUBS_ONLY=false
 
 [Install]
 WantedBy=multi-user.target
