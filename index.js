@@ -3,8 +3,10 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').load();
 }
 const _ = require('lodash');
+const getUrls = require('get-urls');
 const request = require('request');
 const tmi = require('tmi.js');
+const URI = require('urijs');
 const winston = require('winston');
 winston.level = _.get(process, 'env.LOG_LEVEL') || 'error';
 
@@ -35,6 +37,7 @@ const options = {
 
 const client = new tmi.client(options);
 
+// Check messages that are posted in twitch chat
 client.on('message', (channel, userstate, message, self) => {
   winston.log('debug', 'New message');
   winston.log('debug', 'Channel: ', channel);
@@ -43,12 +46,12 @@ client.on('message', (channel, userstate, message, self) => {
 
   // Don't listen to my own messages..
   if (self) return;
-  // Mods only
+  // Mods only mode
   if (MODS_ONLY && !userstate['mod']) {
     winston.log('debug', `NON-MOD posted a clip: ${message}`);
     return;
   }
-  // Subs only
+  // Subs only mode
   if (SUBS_ONLY && !userstate['subscriber']) {
     winston.log('debug', `NON-SUB posted a clip: ${message}`);
     return;
@@ -62,9 +65,10 @@ client.on('message', (channel, userstate, message, self) => {
     case 'chat':
       if (message.indexOf('clips.twitch.tv/') !== -1) {
         winston.log('debug', `Twitch clip posted in chat: ${message}`);
-        postToDiscord(
-          `**${userstate['display-name']}** posted a clip: ${message}`,
-        );
+        const slug = getUrlSlug(message);
+        // postToDiscord(
+        //   `**${userstate['display-name']}** posted a clip: ${message}`,
+        // );
       }
       break;
     case 'whisper':
@@ -78,6 +82,25 @@ client.on('message', (channel, userstate, message, self) => {
 
 // Connect the client to the server..
 client.connect();
+
+function getUrlSlug(message) {
+  const urls = getUrls(message);
+  winston.log('debug', `Found ${urls.size} urls: `, urls);
+  if (urls.size < 1) {
+    winston.log('error', 'No urls found in message', message);
+    return;
+  }
+
+  const path = URI(urls.values().next().value).path();
+  const clipSlug = path.replace('/', '');
+  if (!path || !clipSlug) {
+    winston.log('error', 'Something wrong with this url', urls);
+    return;
+  }
+  winston.log('debug', `Clip slug: ${clipSlug}`);
+}
+
+function getClipInformation(slug) {}
 
 function postToDiscord(val) {
   request.post(
