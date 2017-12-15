@@ -9,10 +9,9 @@ const URI = require('urijs');
 const winston = require('winston');
 winston.level = _.get(process, 'env.LOG_LEVEL') || 'error';
 
-const DISCORD_WEBHOOK_URL =
-  _.get(process, 'env.DISCORD_WEBHOOK_URL') || 'YOUR_DISCORD_WEBHOOK_URL_HERE';
+const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL');
 const TWITCH_CHANNELS = generateChannelList(
-  _.get(process, 'env.TWITCH_CHANNELS') || ['TwitchChannel AnotherChannel'],
+  _.get(process, 'env.TWITCH_CHANNELS'),
 );
 const TWITCH_CLIENT_ID = _.get(process, 'env.TWITCH_CLIENT_ID') || null;
 const BROADCASTER_ONLY =
