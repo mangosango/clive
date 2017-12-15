@@ -12,18 +12,19 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or l
 2. Navigate to a directory (like `~/Developer`).
 3. Run `git clone https://github.com/mangosango/Clive.git && cd Clive`.
 4. Run `npm install`
-5. Copy `.env-exmaple` to `.env`
+5. Copy `.env-exmaple` to `.env`*
 6. Open `.env` in a text editor (like [atom](https://atom.io/)).
 7. Adjust `NODE_ENV` and `LOG_LEVEL` for your use case
 7. Set `DISCORD_WEBHOOK_URL` to your [Discord webhook URL](http://i.imgur.com/sEUCxct.png) between the quotes.*
-8. Set `TWITCH_CHANNELS` to your Twitch channel. For example, if you wanted to watch for clips in `Monstercat`'s chat, you would use `"monstercat"`. If you wanted to monitor multiple channels, you would use `"monstercat mrchowderclam updownleftdie"`.*
+8. Set `TWITCH_CHANNELS` to your Twitch channel. For example, if you wanted to watch for clips in `Monstercat`'s chat, you would use `"monstercat"`. If you wanted to monitor multiple channels, you would use `"monstercat mrchowderclam updownleftdie"`.
 9. (Optional, recommended) Set `TWITCH_CLIENT_ID` to have your Twitch API Client ID [Twitch Dev Getting Started](https://dev.twitch.tv/get-started)
 10. Save `.env`.
 11. In terminal, run `npm start`.
 12. ???
 13. Profit.
 
-\* *If you prefer to use environment variables, you can set `DISCORD_WEBHOOK_URL` and `TWITCH_CHANNELS`. `TWITCH_CHANNELS` should be a space limited set of `channel_name`s. You can set these in the provided `clive.service` file, or by using the `export` command. Here's a [short guide](http://blog.mdda.net/oss/2015/02/16/forever-node-service-systemd). on how to use systemd.*
+\* **.env file is primarly for development and debugging.** Environment variables are perfered for production environment.
+*To use environment variables, you can set `DISCORD_WEBHOOK_URL` and `TWITCH_CHANNELS`. `TWITCH_CHANNELS` should be a space limited set of `channel_name`s. You can set these in the provided `clive.service` file, or by using the `export` command. Here's a [short guide](http://blog.mdda.net/oss/2015/02/16/forever-node-service-systemd). on how to use systemd.*
 
 ## 📋 Todo
 - Option to only send clips of a certain channel or channels.
