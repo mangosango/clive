@@ -14,7 +14,7 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or l
 2. Navigate to a directory (like `~/Developer`).
 3. Run `git clone https://github.com/mangosango/Clive.git && cd Clive`.
 4. Run `npm install`
-5. Copy `.env-exmaple` to `.env`
+5. Copy `.env-exmaple` to `.env`*
 6. Open `.env` in a text editor (like [atom](https://atom.io/)).
 7. Adjust `NODE_ENV` and `LOG_LEVEL` for your use case
 8. Set `DISCORD_WEBHOOK_URL` to your [Discord webhook URL](http://i.imgur.com/sEUCxct.png) between the quotes.\*
