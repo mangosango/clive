@@ -36,7 +36,7 @@
 			"git add"
 		],
 		"**/*.md": [
-			"prettier --write --parser markdown",
+			"prettier --write --parser --prose-wrap never markdown",
 			"git add"
 		]
 	}
