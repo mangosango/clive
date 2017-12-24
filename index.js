@@ -3,6 +3,8 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').load();
 }
 const _ = require('lodash');
+const FileSync = require('lowdb/adapters/FileSync');
+const lowdb = require('lowdb');
 const request = require('request-promise');
 const tmi = require('tmi.js');
 const URI = require('urijs');
@@ -26,7 +28,13 @@ if (TWITCH_CLIENT_ID && RESTRICT_CHANNELS) {
     TWITCH_CHANNEL_IDS = userIds;
     logStartInfo();
   });
+} else {
+  logStartInfo();
 }
+
+const adapter = new FileSync('db.json');
+const db = lowdb(adapter);
+db.defaults({ postedClipIds: [] }).write();
 
 function logStartInfo() {
   winston.log('info', 'Config settings:\n', {
@@ -93,10 +101,23 @@ function createTmiClient() {
       case 'chat':
         if (message.indexOf('clips.twitch.tv/') !== -1) {
           winston.log('debug', `Clip detected in message: ${message}`);
+          const clipId = getUrlSlug(message);
+          // check if its a duplicate clip
+          const postedClip = chceckDbForClip(clipId);
+          if (postedClip) {
+            winston.log(
+              'info',
+              `Clip ID: ${clipId} was already pushed to Discord on ${new Date(
+                postedClip.date,
+              )}`,
+            );
+            return;
+          }
+
           if (TWITCH_CLIENT_ID) {
-            postUsingTwitchAPI(message);
+            postUsingTwitchAPI(clipId);
           } else {
-            postUsingMessageInfo(message);
+            postUsingMessageInfo({ clipId, message, userstate });
           }
         }
         break;
@@ -113,8 +134,7 @@ function createTmiClient() {
   client.connect();
 }
 
-function postUsingTwitchAPI(message) {
-  const clipId = getUrlSlug(message);
+function postUsingTwitchAPI(clipId) {
   twitchApiGetCall('clips', clipId).then(clipInfo => {
     winston.log('debug', 'Twitch clip results:', clipInfo);
 
@@ -131,17 +151,26 @@ function postUsingTwitchAPI(message) {
       twitchApiGetCall('games', clipInfo.game_id),
     ]).then(results => {
       winston.log('debug', 'Async results:', results);
-      postToDiscord(
-        `**${results[0].display_name}** posted a clip during ${
-          results[1].name
-        }: *${clipInfo.title}*\n${clipInfo.url}`,
-      );
+      postToDiscord({
+        displayName: results[0].display_name,
+        gameName: results[1].name,
+        clipInfo,
+      });
     });
   });
 }
 
-function postUsingMessageInfo(message) {
-  postToDiscord(`**${userstate['display-name']}** posted a clip: ${message}`);
+function postUsingMessageInfo({ clipId, message, userstate }) {
+  // Reform legacy message
+  postToDiscord({
+    displayName: userstate['display-name'],
+    gameName: 'the last stream',
+    clipInfo: {
+      title: message,
+      url: '',
+      id: clipId,
+    },
+  });
 }
 
 function getUrlSlug(message) {
@@ -163,6 +192,21 @@ function getUrlSlug(message) {
   }
   winston.log('debug', `Clip slug: ${clipId}`);
   return clipId;
+}
+
+function chceckDbForClip(clipId) {
+  const isInDatabase = db
+    .get('postedClipIds')
+    .find({ id: clipId })
+    .value();
+  return isInDatabase;
+}
+
+function insertClipIdToDb(clipId) {
+  db
+    .get('postedClipIds')
+    .push({ id: clipId, date: Date.now() })
+    .write();
 }
 
 async function twitchApiGetCall(endpoint, id) {
@@ -214,12 +258,14 @@ async function resolveTwitchUsernamesToIds(usernames) {
   return await Promise.all(usernameFuncs).then(userIds => userIds);
 }
 
-function postToDiscord(val) {
+function postToDiscord({ displayName, gameName, clipInfo }) {
   request.post(
     DISCORD_WEBHOOK_URL,
     {
       json: {
-        content: val,
+        content: `**${displayName}** posted a clip during ${gameName}: *${
+          clipInfo.title
+        }*\n${clipInfo.url}`,
         username: 'Clive',
         avatar_url: 'http://i.imgur.com/9s3TBNv.png',
       },
@@ -227,8 +273,8 @@ function postToDiscord(val) {
     (error, response, body) => {
       if (error) {
         winston.log('error', 'Error posting to Discord', response, body);
-      } else if (response.statusCode === 200) {
-        winston.log('info', body);
+      } else if (response.statusCode === 204) {
+        insertClipIdToDb(clipInfo.id);
       }
     },
   );
