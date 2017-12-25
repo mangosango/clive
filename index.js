@@ -15,6 +15,7 @@ const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL');
 const TWITCH_CHANNELS = generateChannelList(
   _.get(process, 'env.TWITCH_CHANNELS'),
 );
+const DB_FILE = _.get(process, 'env.DB_FILE') || 'db.json';
 const TWITCH_CLIENT_ID = _.get(process, 'env.TWITCH_CLIENT_ID') || null;
 const RESTRICT_CHANNELS = _.get(process, 'env.RESTRICT_CHANNELS') || true;
 const BROADCASTER_ONLY =
@@ -32,7 +33,7 @@ if (TWITCH_CLIENT_ID && RESTRICT_CHANNELS) {
   logStartInfo();
 }
 
-const adapter = new FileSync('db.json');
+const adapter = new FileSync(DB_FILE);
 const db = lowdb(adapter);
 db.defaults({ postedClipIds: [] }).write();
 
