@@ -1,7 +1,9 @@
 const _ = require('lodash');
 
 const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL') || "YOUR_DISCORD_WEBHOOK_URL_HERE";
+const DISCORD_POST_DELAY = _.get(process, 'env.DISCORD_POST_DELAY') || 1000; // 1s
 let channelArray = _.get(process, 'env.TWITCH_CHANNELS');
+
 if (channelArray) {
 	channelArray = _.split(channelArray, ' ');
 } else {
@@ -38,7 +40,11 @@ client.on("message", function (channel, userstate, message, self) {
     case "chat":
       // console.log(userstate);
       if (message.indexOf("clips.twitch.tv/") !== -1) {
-        postThing(`**${userstate["display-name"]}** posted a clip: ${message}`);
+	// Delay the message to ensure its finished being genreated by Twitch
+        setTimeout(
+          () => postDiscordMessage(`**@${userstate["display-name"]}** posted a clip: ${message}`),
+	  DISCORD_POST_DELAY
+	);
       }
       break;
     case "whisper":
@@ -53,12 +59,12 @@ client.on("message", function (channel, userstate, message, self) {
 // Connect the client to the server..
 client.connect();
 
-function postThing(val) {
+function postDiscordMessage(msg) {
   request.post(
     DISCORD_WEBHOOK_URL,
     { json:
       {
-        content: val,
+        content: msg,
         username: "Clive",
         avatar_url: "http://i.imgur.com/9s3TBNv.png",
       }
