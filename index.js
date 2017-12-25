@@ -40,6 +40,7 @@ db.defaults({ postedClipIds: [] }).write();
 function logStartInfo() {
   winston.log('info', 'Config settings:\n', {
     DISCORD_WEBHOOK_URL,
+    DB_FILE,
     TWITCH_CHANNELS,
     TWITCH_CHANNEL_IDS,
     RESTRICT_CHANNELS,
