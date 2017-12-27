@@ -2,15 +2,16 @@
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').load();
 }
+// Imports
 const _ = require('lodash');
 const FileSync = require('lowdb/adapters/FileSync');
 const lowdb = require('lowdb');
 const request = require('request-promise');
 const tmi = require('tmi.js');
 const URI = require('urijs');
-const winston = require('winston');
-winston.level = _.get(process, 'env.LOG_LEVEL') || 'error';
+const { createLogger, format, transports } = require('winston');
 
+//Initialize constants
 const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL');
 const TWITCH_CHANNELS = generateChannelList(
   _.get(process, 'env.TWITCH_CHANNELS'),
@@ -23,6 +24,27 @@ const BROADCASTER_ONLY =
 const MODS_ONLY = _.get(process, 'env.MODS_ONLY') === 'true' || false;
 const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY') === 'true' || false;
 
+//Initialize logger
+const logger = createLogger({
+  level: _.get(process, 'env.LOG_LEVEL') || 'error',
+  format: format.combine(format.timestamp(), format.prettyPrint()),
+  transports: [
+    // - Write to all logs with level `info` and below to `clive.log`
+    new transports.File({
+      filename: _.get(process, 'env.LOG_FILE') || 'clive.log',
+    }),
+  ],
+});
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(
+    new transports.Console({
+      format: format.simple(),
+    }),
+  );
+}
+
+// If we have a twitch client ID and you want to restrict postings of clips to only those channels Clive is watching
+// Do a one-time lookup of twitch login names to IDs
 let TWITCH_CHANNEL_IDS = [];
 if (TWITCH_CLIENT_ID && RESTRICT_CHANNELS) {
   resolveTwitchUsernamesToIds(TWITCH_CHANNELS).then(userIds => {
@@ -38,7 +60,7 @@ const db = lowdb(adapter);
 db.defaults({ postedClipIds: [] }).write();
 
 function logStartInfo() {
-  winston.log('info', 'Config settings:\n', {
+  logger.log('info', 'CONFIG SETTINGS:\n', {
     DISCORD_WEBHOOK_URL,
     DB_FILE,
     TWITCH_CHANNELS,
@@ -48,7 +70,7 @@ function logStartInfo() {
     MODS_ONLY,
     SUBS_ONLY,
   });
-  winston.log(
+  logger.log(
     'info',
     `Twitch Client ID is ${TWITCH_CLIENT_ID ? '' : 'NOT '}set`,
   );
@@ -71,27 +93,29 @@ function createTmiClient() {
 
   // Check messages that are posted in twitch chat
   client.on('message', (channel, userstate, message, self) => {
-    winston.log('debug', 'New message');
-    winston.log('debug', 'Channel: ', channel);
-    winston.log('debug', 'Userstate: ', userstate);
-    winston.log('debug', 'Message: ', message);
+    const debugMessage = {
+      channel,
+      userstate,
+      message,
+    };
+    logger.log('debug', 'NEW MESSAGE:\n', debugMessage);
 
     // Don't listen to my own messages..
     if (self) return;
     // Broadcaster only mode
     const isBroadcaster = userstate['badges'].broadcaster === '1';
     if (BROADCASTER_ONLY && !isBroadcaster) {
-      winston.log('debug', `NON-BROADCASTER posted a clip: ${message}`);
+      logger.log('info', `NON-BROADCASTER posted a clip: ${message}`);
       return;
     }
     // Mods only mode
     if (MODS_ONLY && !(userstate['mod'] || isBroadcaster)) {
-      winston.log('debug', `NON-MOD posted a clip: ${message}`);
+      logger.log('info', `NON-MOD posted a clip: ${message}`);
       return;
     }
     // Subs only mode
     if (SUBS_ONLY && !userstate['subscriber']) {
-      winston.log('debug', `NON-SUB posted a clip: ${message}`);
+      logger.log('info', `NON-SUB posted a clip: ${message}`);
       return;
     }
 
@@ -102,23 +126,24 @@ function createTmiClient() {
         break;
       case 'chat':
         if (message.indexOf('clips.twitch.tv/') !== -1) {
-          winston.log('debug', `Clip detected in message: ${message}`);
+          logger.log('debug', `CLIP DETECTED: in message: ${message}`);
           const clipId = getUrlSlug(message);
-          // check if its a duplicate clip
+          // check if its this clip has already been shared
           const postedClip = chceckDbForClip(clipId);
           if (postedClip) {
-            winston.log(
+            logger.log(
               'info',
-              `Clip ID: ${clipId} was already pushed to Discord on ${new Date(
+              `PREVIOUSLY SHARED CLIP: ${clipId} was pushed to Discord on ${new Date(
                 postedClip.date,
               )}`,
             );
             return;
           }
-
+          // If we have a client ID we can use the Twitch API
           if (TWITCH_CLIENT_ID) {
             postUsingTwitchAPI(clipId);
           } else {
+            // Fallback to dumb method of posting
             postUsingMessageInfo({ clipId, message, userstate });
           }
         }
@@ -138,13 +163,13 @@ function createTmiClient() {
 
 function postUsingTwitchAPI(clipId) {
   twitchApiGetCall('clips', clipId).then(clipInfo => {
-    winston.log('debug', 'Twitch clip results:', clipInfo);
+    logger.log('debug', 'Twitch clip results:', clipInfo);
 
     if (
       RESTRICT_CHANNELS &&
       TWITCH_CHANNEL_IDS.indexOf(clipInfo.broadcaster_id) === -1
     ) {
-      winston.log('info', 'Clip from unselected channel was posted in chat');
+      logger.log('info', 'OUTSIDER CLIP: Posted in chat from tracked channel');
       return;
     }
 
@@ -152,7 +177,7 @@ function postUsingTwitchAPI(clipId) {
       twitchApiGetCall('users', clipInfo.creator_id),
       twitchApiGetCall('games', clipInfo.game_id),
     ]).then(results => {
-      winston.log('debug', 'Async results:', results);
+      logger.log('debug', 'Async results:', results);
       postToDiscord({
         displayName: results[0].display_name,
         gameName: results[1].name,
@@ -163,7 +188,7 @@ function postUsingTwitchAPI(clipId) {
 }
 
 function postUsingMessageInfo({ clipId, message, userstate }) {
-  // Reform legacy message
+  // Reform legacy message to fit string template
   postToDiscord({
     displayName: userstate['display-name'],
     gameName: 'the last stream',
@@ -180,28 +205,27 @@ function getUrlSlug(message) {
   const urls = _.filter(_.split(message, ' '), messagePart => {
     return messagePart.indexOf('clips.twitch.tv/') !== -1;
   });
-  winston.log('debug', `Found ${urls.length} urls: `, urls);
+  logger.log('debug', `URLs FOUND: ${urls.length} urls: `, urls);
   if (urls.length < 1) {
-    winston.log('error', 'No urls found in message', message);
+    logger.log('error', 'ERROR: no urls found in message', message);
     return;
   }
 
   const path = URI(urls[0]).path();
   const clipId = path.replace('/', '');
   if (!path || !clipId) {
-    winston.log('error', 'Something wrong with this url', urls[0]);
+    logger.log('error', `MALFORMED URL: ${urls[0]}`);
     return;
   }
-  winston.log('debug', `Clip slug: ${clipId}`);
+  logger.log('debug', `CLIP SLUG: ${clipId}`);
   return clipId;
 }
 
 function chceckDbForClip(clipId) {
-  const isInDatabase = db
+  return db
     .get('postedClipIds')
     .find({ id: clipId })
     .value();
-  return isInDatabase;
 }
 
 function insertClipIdToDb(clipId) {
@@ -223,12 +247,12 @@ async function twitchApiGetCall(endpoint, id) {
     },
     json: true,
   };
-  winston.log('info', `Calling /${endpoint}?id=${id}`);
+  logger.log('info', `GET: /${endpoint}?id=${id}`);
   try {
     const response = await request(options);
     return response.data[0];
   } catch (err) {
-    winston.log('error', `Error calling twitch API /${endpoint}:`, err);
+    logger.log('error', `ERROR: GET twitch API /${endpoint}:`, err);
     return;
   }
 }
@@ -247,13 +271,13 @@ async function resolveTwitchUsernamesToIds(usernames) {
       },
       json: true,
     };
-    winston.log('info', `Calling /users?login=${username}`);
+    logger.log('info', `GET: /users?login=${username}`);
     try {
       const response = await request(options);
       request(options);
       return response.data[0].id;
     } catch (err) {
-      winston.log('error', `Error calling twitch API /users:`, err);
+      logger.log('error', `ERROR: GET twitch API /users:`, err);
       return;
     }
   });
@@ -274,7 +298,7 @@ function postToDiscord({ displayName, gameName, clipInfo }) {
     },
     (error, response, body) => {
       if (error) {
-        winston.log('error', 'Error posting to Discord', response, body);
+        logger.log('error', 'ERROR: posting to Discord', response, body);
       } else if (response.statusCode === 204) {
         insertClipIdToDb(clipInfo.id);
       }
