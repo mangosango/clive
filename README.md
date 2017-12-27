@@ -27,7 +27,7 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or l
 
 ### 🚩 Settings Flags
 
-`SETTING` (required or optional) \[default production setting\]
+`SETTING_NAME` (required or optional to be set) \[default production setting\]
 
 * `NODE_ENV` (optional) \[production\]
   * Set to dev for development or production for normal usage
@@ -55,9 +55,11 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or l
 * `SUBS_ONLY` (optional) \[false\]
   * If true, only allows subscribers to post clips.
 * `BROADCASTER_ONLY` (optional) \[false\]
-  * If true, only allows the broadcaster to post clips. NOTE: **broadcaster is not considered a mod by default.**
+  * If true, only allows the broadcaster to post clips. **NOTE**: broadcaster is **not** considered a mod by default.
 
-`MODS_ONLY`, `SUBS_ONLY`, and `BROADCASTER_ONLY` can be combined. Example: turning all `BROADCASTER_ONLY` and `SUBS_ONLY` will only share clips posted by those two groups.
+`MODS_ONLY`, `SUBS_ONLY`, and `BROADCASTER_ONLY` can be combined.  
+Example: turning all `BROADCASTER_ONLY` and `SUBS_ONLY` will only share clips posted by those two groups.  
+All three set to `false` on means anyone can post a clip link. Be careful if you are not using a `TWITCH_CLIENT_ID` AND `RESTRICT_CHANNELS` or else ANY clips will be shared to your Discord.
 
 ## 📋 Todo
 
