@@ -57,6 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 
+#database
+db.json
 
 # Covers JetBrains IDEs
 .idea
