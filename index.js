@@ -198,7 +198,6 @@ function postUsingMessageInfo({ clipId, message, userstate }) {
       id: clipId,
     },
   });
-}
 
 function getUrlSlug(message) {
   // split message by spaces, then filter out anything that's not a twitch clip
