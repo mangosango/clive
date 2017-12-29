@@ -198,6 +198,7 @@ function postUsingMessageInfo({ clipId, message, userstate }) {
       id: clipId,
     },
   });
+}
 
 function getUrlSlug(message) {
   // split message by spaces, then filter out anything that's not a twitch clip
@@ -273,7 +274,6 @@ async function resolveTwitchUsernamesToIds(usernames) {
     logger.log('info', `GET: /users?login=${username}`);
     try {
       const response = await request(options);
-      request(options);
       return response.data[0].id;
     } catch (err) {
       logger.log('error', `ERROR: GET twitch API /users:`, err);
