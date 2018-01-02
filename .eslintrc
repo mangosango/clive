@@ -1,0 +1,18 @@
+{
+  "plugins": ["prettier"],
+  "rules": {
+    "no-unused-vars": "error",
+    "prettier/prettier": [
+      "error",
+      {
+        "singleQuote": true,
+        "trailingComma": "all"
+      }
+    ]
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "extends": ["prettier"]
+}
