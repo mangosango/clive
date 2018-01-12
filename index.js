@@ -23,6 +23,7 @@ const BROADCASTER_ONLY =
   _.get(process, 'env.BROADCASTER_ONLY') === 'true' || false;
 const MODS_ONLY = _.get(process, 'env.MODS_ONLY') === 'true' || false;
 const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY') === 'true' || false;
+const RICH_EMBED = _.get(process, 'env.RICH_EMBED') === 'true' || false;
 
 //Initialize logger
 const logger = createLogger({
@@ -103,7 +104,7 @@ function createTmiClient() {
     // Don't listen to my own messages..
     if (self) return;
     // Broadcaster only mode
-    const isBroadcaster = userstate['badges'].broadcaster === '1';
+    const isBroadcaster = _.get(userstate, '[badges].broadcaster') === '1';
     if (BROADCASTER_ONLY && !isBroadcaster) {
       logger.log('info', `NON-BROADCASTER posted a clip: ${message}`);
       return;
@@ -175,29 +176,25 @@ function postUsingTwitchAPI(clipId) {
 
     Promise.all([
       twitchApiGetCall('users', clipInfo.creator_id),
+      twitchApiGetCall('users', clipInfo.broadcaster_id),
       twitchApiGetCall('games', clipInfo.game_id),
     ]).then(results => {
-      logger.log('debug', 'Async results:', results);
-      postToDiscord({
-        displayName: results[0].display_name,
-        gameName: results[1].name,
+      logger.log('debug', 'DEBUG: Async results:\n', results);
+      const content = buildMessage({
+        userInfo: results[0],
+        broadcasterInfo: results[1],
+        gameInfo: results[2],
         clipInfo,
       });
+      logger.log('debug', 'DEBUG: generated rich embed', content);
+      postToDiscord({ content, clipId, clipInfo });
     });
   });
 }
 
 function postUsingMessageInfo({ clipId, message, userstate }) {
-  // Reform legacy message to fit string template
-  postToDiscord({
-    displayName: userstate['display-name'],
-    gameName: 'the last stream',
-    clipInfo: {
-      title: message,
-      url: '',
-      id: clipId,
-    },
-  });
+  const content = `**${userstate['display-name']}** posted a clip: ${message}`;
+  postToDiscord({ content, clipId });
 }
 
 function getUrlSlug(message) {
@@ -283,31 +280,115 @@ async function resolveTwitchUsernamesToIds(usernames) {
   return await Promise.all(usernameFuncs).then(userIds => userIds);
 }
 
-function postToDiscord({ displayName, gameName, clipInfo }) {
-  request.post(
-    DISCORD_WEBHOOK_URL,
-    {
-      json: {
-        content: `**${displayName}** posted a clip during ${gameName}: *${
-          clipInfo.title
-        }*\n${clipInfo.url}`,
-        username: 'Clive',
-        avatar_url: 'http://i.imgur.com/9s3TBNv.png',
-      },
-    },
-    (error, response, body) => {
-      if (error) {
-        logger.log('error', 'ERROR: posting to Discord', response, body);
-      } else if (response.statusCode === 204) {
-        insertClipIdToDb(clipInfo.id);
-      }
-    },
-  );
+function postToDiscord({ content, clipId, clipInfo }) {
+  let body = {};
+  if (typeof content === 'object') {
+    body = content;
+  } else {
+    body = { content };
+  }
+  body.username = 'Clive';
+  body.avatar_url = 'http://i.imgur.com/9s3TBNv.png';
+
+  const options = {
+    method: 'POST',
+    uri: DISCORD_WEBHOOK_URL,
+    body,
+    json: true,
+    resolveWithFullResponse: true,
+  };
+
+  if (RICH_EMBED && TWITCH_CLIENT_ID) {
+    const videoOptions = _.cloneDeep(options);
+    delete videoOptions.body.embeds;
+    videoOptions.body.content = `*${clipInfo.title}*\n${clipInfo.url}`;
+    logger.log('debug', 'POST: 1 of 2 requests with options', videoOptions);
+
+    // ensure order of the posts, nest the promises
+    request
+      .post(videoOptions)
+      .then(response => {
+        if (response.statusCode === 204) {
+          logger.log('debug', 'POST: 2 of 2 requests with options', options);
+          request
+            .post(options)
+            .then(response => {
+              if (response.statusCode === 204) {
+                insertClipIdToDb(clipId);
+              }
+            })
+            .catch(err => {
+              logger.log('error', 'ERROR: posting to Discord', err);
+            });
+        }
+      })
+      .catch(err => {
+        logger.log('error', 'ERROR: posting to Discord', err);
+      });
+  } else {
+    request
+      .post(options)
+      .then(response => {
+        if (response.statusCode === 204) {
+          insertClipIdToDb(clipId);
+        }
+      })
+      .catch(err => {
+        logger.log('error', 'ERROR: posting to Discord', err);
+      });
+  }
+}
+
+function buildMessage({ userInfo, broadcasterInfo, gameInfo, clipInfo }) {
+  if (!RICH_EMBED) {
+    const string = `*${clipInfo.title}*\n**${
+      userInfo.display_name
+    }** created a clip of **${broadcasterInfo.display_name}** playing __${
+      gameInfo.name
+    }__\n${clipInfo.url}`;
+    return string;
+  } else {
+    return {
+      content: '',
+      embeds: [
+        {
+          title: clipInfo.title,
+          url: clipInfo.url,
+          color: 9442302,
+          timestamp: clipInfo.created_at,
+          thumbnail: {
+            url: gameInfo.box_art_url
+              .replace('{height}', '80')
+              .replace('{width}', '80'),
+          },
+          author: {
+            name: userInfo.display_name,
+            url: `https://www.twitch.tv/${userInfo.login}`,
+            icon_url: userInfo.profile_image_url,
+          },
+          fields: [
+            {
+              name: 'Channel',
+              value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${
+                broadcasterInfo.login
+              })`,
+              inline: true,
+            },
+            {
+              name: 'Game',
+              value: gameInfo.name || '',
+              inline: true,
+            },
+          ],
+        },
+      ],
+    };
+  }
 }
 
 // Takes space-separated string of twitch channels parses them, adds a # prefix, and puts them into an array
 function generateChannelList(channelsString) {
-  let channelArray = _.split(channelsString, ' ');
+  const channelArray = _.split(channelsString, ' ');
 
   return channelArray.map(channel => {
     return `#${channel.toLowerCase()}`;
