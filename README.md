@@ -55,7 +55,12 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or l
 * `SUBS_ONLY` (optional) \[false\]
   * If true, only allows subscribers to post clips.
 * `BROADCASTER_ONLY` (optional) \[false\]
-  * If true, only allows the broadcaster to post clips. **NOTE**: broadcaster is **not** considered a mod by default.
+  * If true, only allows the broadcaster to post clips. **NOTE**: broadcaster is **not** considered a mod by default on Twitch.
+* `RICH_EMBED` (optional) \[true\]
+
+  * **REQUIRES**: `TWICH_CLIENT_ID` to be set.  
+    If true will post two messages to Discord the first being the video and the second being a rich embed box that contains more information about the clip.  
+    Two separate messages are necessary because Discord doesn't allow setting `video` element inside of the rich embed object.
 
 `MODS_ONLY`, `SUBS_ONLY`, and `BROADCASTER_ONLY` can be combined.  
 Example: turning all `BROADCASTER_ONLY` and `SUBS_ONLY` will only share clips posted by those two groups.  
@@ -67,7 +72,7 @@ All three set to `false` on means anyone can post a clip link. Be careful if you
 * ~~Option to only send clips posted by broadcaster, mods, or subs.~~
 * ~~Set the `DISCORD_WEBHOOK_URL` to pull from an evar or something.~~
 * ~~Track previously posted twitch clips~~
-* Use Discord Rich Embed messages
+* ~~Use Discord Rich Embed messages~~
 * Having a UI or hosting this somewhere would be nice.
 * Make clive an actual Discord bot, but that would require actual work lol.
 * ~~MFW the Readme is bigger than the app LUL~~
