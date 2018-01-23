@@ -17,6 +17,7 @@ Environment=TWITCH_CLIENT_ID=null
 Environment=MODS_ONLY=false
 Environmnet=SUBS_ONLY=false
 Environment=BROADCASTER_ONLY=false
+Environment=RICH_EMBED=true
 
 [Install]
 WantedBy=multi-user.target
