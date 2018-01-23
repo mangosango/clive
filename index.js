@@ -13,6 +13,9 @@ const { createLogger, format, transports } = require('winston');
 
 //Initialize constants
 const DISCORD_WEBHOOK_URL = _.get(process, 'env.DISCORD_WEBHOOK_URL');
+const URL_AVATAR = _.get(process, 'env.URL_AVATAR');
+const BOT_USERNAME = _.get(process, 'env.BOT_USERNAME');
+
 const TWITCH_CHANNELS = generateChannelList(
   _.get(process, 'env.TWITCH_CHANNELS'),
 );
@@ -287,8 +290,8 @@ function postToDiscord({ content, clipId, clipInfo }) {
   } else {
     body = { content };
   }
-  body.username = 'Clive';
-  body.avatar_url = 'http://i.imgur.com/9s3TBNv.png';
+  body.username = BOT_USERNAME;
+  body.avatar_url = URL_AVATAR;
 
   const options = {
     method: 'POST',
