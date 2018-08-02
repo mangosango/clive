@@ -15,9 +15,11 @@ Environment=DISCORD_WEBHOOK_URL=https://discordapp.com/api/webhooks/YOUR_DISCORD
 Environment="TWITCH_CHANNELS=a_twitch_channel another_twitch_channel"
 Environment=TWITCH_CLIENT_ID=null
 Environment=MODS_ONLY=false
-Environmnet=SUBS_ONLY=false
+Environment=SUBS_ONLY=false
 Environment=BROADCASTER_ONLY=false
 Environment=RICH_EMBED=true
+Environment=URL_AVATAR=http://i.imgur.com/9s3TBNv.png
+Environment=BOT_USERNAME=Clive
 
 [Install]
 WantedBy=multi-user.target
