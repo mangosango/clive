@@ -42,7 +42,7 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or l
 - **`DB_FILE` (required)** \[db.json]
   - Set this to the location of your JSON db file. If running as a service make sure to use the absolute file path.
 - **`DISCORD_WEBHOOK_URL` (required)**
-  - Set this to your Discord webhook for the chanel you want Clive to post in! [Discord webhook URL](http://i.imgur.com/sEUCxct.png)
+  - Set this to your Discord webhook for the channel you want Clive to post in! [Discord webhook URL](http://i.imgur.com/sEUCxct.png)
 - **`TWITCH_CHANNELS` (required)**
   - Set the channels you want Clive to monitor for clips. These are also used for `RESTRICT_CHANNELS` If you wanted to watch for clips in `Monstercat`'s chat, you would use `"monstercat"`. If you wanted to monitor multiple channels, you would use `"monstercat mrchowderclam updownleftdie"`.
 - `TWITCH_CLIENT_ID` (optional, suggested) \[null]
