@@ -7,7 +7,7 @@ const _ = require('lodash');
 const FileSync = require('lowdb/adapters/FileSync');
 const lowdb = require('lowdb');
 const request = require('request-promise');
-const tmi = require('tmi.js');
+const TwitchJS = require('twitch-js');
 const URI = require('urijs');
 const { createLogger, format, transports } = require('winston');
 
@@ -79,11 +79,11 @@ function logStartInfo() {
     `Twitch Client ID is ${TWITCH_CLIENT_ID ? '' : 'NOT '}set`,
   );
 
-  createTmiClient();
+  createTwitchClient();
 }
 
-function createTmiClient() {
-  const tmiOptions = {
+function createTwitchClient() {
+  const twitchClientOptions = {
     options: {
       debug: _.get(process, 'env.LOG_LEVEL') === 'debug' || false,
     },
@@ -93,7 +93,7 @@ function createTmiClient() {
     channels: TWITCH_CHANNELS,
   };
 
-  const client = new tmi.client(tmiOptions);
+  const client = new TwitchJS.client(twitchClientOptions);
 
   // Check messages that are posted in twitch chat
   client.on('message', (channel, userstate, message, self) => {
