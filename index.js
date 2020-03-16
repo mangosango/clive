@@ -6,7 +6,6 @@ const FileSync = require('lowdb/adapters/FileSync');
 const lowdb = require('lowdb');
 const request = require('request-promise');
 const tmi = require('tmi.js');
-const URI = require('urijs');
 const { createLogger, format, transports } = require('winston');
 
 //Initialize constants
@@ -26,6 +25,10 @@ const BROADCASTER_ONLY =
 const MODS_ONLY = _.get(process, 'env.MODS_ONLY', false) === 'true';
 const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY', false) === 'true';
 const RICH_EMBED = _.get(process, 'env.RICH_EMBED', false) === 'true';
+
+// (twitch.tv\/.*\/clip) check https://www.twitch.tv/username/clip/clip_id
+// (clips.twitch.tv) checks https://clips.twitch.tv/clip_id
+const CLIPS_REGEX = /(twitch.tv\/.*\/clip)|(clips.twitch.tv)\/\w+/i;
 
 //Initialize logger
 const logger = createLogger({
@@ -129,7 +132,7 @@ function createTwitchClient() {
         // This is an action message..
         break;
       case 'chat':
-        if (message.indexOf('clips.twitch.tv/') !== -1) {
+        if (CLIPS_REGEX.test(message)) {
           logger.log('debug', `CLIP DETECTED: in message: ${message}`);
           const clipId = getUrlSlug(message);
           // check if its this clip has already been shared
@@ -148,7 +151,7 @@ function createTwitchClient() {
             postUsingTwitchAPI(clipId);
           } else {
             // Fallback to dumb method of posting
-            postUsingMessageInfo({ clipId, message, userstate });
+            postUsingMessageInfo({ clipId, userstate });
           }
         }
         break;
@@ -199,15 +202,16 @@ function postUsingTwitchAPI(clipId) {
   });
 }
 
-function postUsingMessageInfo({ clipId, message, userstate }) {
-  const content = `**${userstate['display-name']}** posted a clip: ${message}`;
+function postUsingMessageInfo({ clipId, userstate }) {
+  const clipUrl = `https://clips.twitch.tv/${clipId}`;
+  const content = `**${userstate['display-name']}** posted a clip: ${clipUrl}`;
   postToDiscord({ content, clipId });
 }
 
 function getUrlSlug(message) {
   // split message by spaces, then filter out anything that's not a twitch clip
   const urls = _.filter(_.split(message, ' '), messagePart => {
-    return messagePart.indexOf('clips.twitch.tv/') !== -1;
+    return CLIPS_REGEX.test(messagePart);
   });
   logger.log('debug', `URLs FOUND: ${urls.length} urls: `, urls);
   if (urls.length < 1) {
@@ -215,8 +219,8 @@ function getUrlSlug(message) {
     return;
   }
 
-  const path = URI(urls[0]).path();
-  const clipId = path.replace('/', '');
+  const path = new URL(urls[0]).pathname;
+  const clipId = path.split('/').pop();
   if (!path || !clipId) {
     logger.log('error', `MALFORMED URL: ${urls[0]}`);
     return;

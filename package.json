@@ -16,7 +16,6 @@
 		"request": "^2.88.2",
 		"request-promise": "^4.2.5",
 		"tmi.js": "^1.5.0",
-		"urijs": "^1.19.2",
 		"winston": "^3.2.1"
 	},
 	"devDependencies": {
