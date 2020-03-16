@@ -5,7 +5,7 @@ const _ = require('lodash');
 const FileSync = require('lowdb/adapters/FileSync');
 const lowdb = require('lowdb');
 const request = require('request-promise');
-const TwitchJS = require('twitch-js');
+const tmi = require('tmi.js');
 const URI = require('urijs');
 const { createLogger, format, transports } = require('winston');
 
@@ -88,11 +88,12 @@ function createTwitchClient() {
     },
     connection: {
       reconnect: true,
+      secure: true,
     },
     channels: TWITCH_CHANNELS,
   };
 
-  const client = new TwitchJS.client(twitchClientOptions);
+  const client = new tmi.Client(twitchClientOptions);
 
   // Check messages that are posted in twitch chat
   client.on('message', (channel, userstate, message, self) => {
