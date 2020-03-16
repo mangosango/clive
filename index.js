@@ -1,7 +1,5 @@
 'use strict';
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').load();
-}
+require('dotenv').config();
 // Imports
 const _ = require('lodash');
 const FileSync = require('lowdb/adapters/FileSync');
@@ -166,8 +164,12 @@ function createTmiClient() {
 }
 
 function postUsingTwitchAPI(clipId) {
-  twitchApiGetCall('clips', clipId).then(clipInfo => {
-    logger.log('debug', 'Twitch clip results:', clipInfo);
+  twitchApiGetCall('clips', clipId).then(res => {
+    logger.log('debug', 'Twitch clip results:', res);
+    const clipInfo = {
+      ...res,
+      title: clipInfo.title.trim(),
+    };
 
     if (
       RESTRICT_CHANNELS &&
@@ -229,8 +231,7 @@ function chceckDbForClip(clipId) {
 }
 
 function insertClipIdToDb(clipId) {
-  db
-    .get('postedClipIds')
+  db.get('postedClipIds')
     .push({ id: clipId, date: Date.now() })
     .write();
 }
@@ -344,11 +345,7 @@ function postToDiscord({ content, clipId, clipInfo }) {
 
 function buildMessage({ userInfo, broadcasterInfo, gameInfo, clipInfo }) {
   if (!RICH_EMBED) {
-    const string = `*${clipInfo.title}*\n**${
-      userInfo.display_name
-    }** created a clip of **${broadcasterInfo.display_name}** playing __${
-      gameInfo.name
-    }__\n${clipInfo.url}`;
+    const string = `*${clipInfo.title}*\n**${userInfo.display_name}** created a clip of **${broadcasterInfo.display_name}** playing __${gameInfo.name}__\n${clipInfo.url}`;
     return string;
   } else {
     return {
@@ -372,9 +369,7 @@ function buildMessage({ userInfo, broadcasterInfo, gameInfo, clipInfo }) {
           fields: [
             {
               name: 'Channel',
-              value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${
-                broadcasterInfo.login
-              })`,
+              value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${broadcasterInfo.login})`,
               inline: true,
             },
             {
