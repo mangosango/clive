@@ -13,6 +13,7 @@
 		"dotenv": "^8.2.0",
 		"lodash": "^4.17.15",
 		"lowdb": "^1.0.0",
+		"request": "^2.88.2",
 		"request-promise": "^4.2.5",
 		"tmi.js": "^1.5.0",
 		"urijs": "^1.19.2",

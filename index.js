@@ -5,7 +5,7 @@ const _ = require('lodash');
 const FileSync = require('lowdb/adapters/FileSync');
 const lowdb = require('lowdb');
 const request = require('request-promise');
-const tmi = require('tmi.js');
+const TwitchJS = require('twitch-js');
 const URI = require('urijs');
 const { createLogger, format, transports } = require('winston');
 
@@ -19,12 +19,13 @@ const TWITCH_CHANNELS = generateChannelList(
 );
 const DB_FILE = _.get(process, 'env.DB_FILE') || 'db.json';
 const TWITCH_CLIENT_ID = _.get(process, 'env.TWITCH_CLIENT_ID') || null;
-const RESTRICT_CHANNELS = _.get(process, 'env.RESTRICT_CHANNELS') || true;
+const RESTRICT_CHANNELS =
+  _.get(process, 'env.RESTRICT_CHANNELS', true) === 'true';
 const BROADCASTER_ONLY =
-  _.get(process, 'env.BROADCASTER_ONLY') === 'true' || false;
-const MODS_ONLY = _.get(process, 'env.MODS_ONLY') === 'true' || false;
-const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY') === 'true' || false;
-const RICH_EMBED = _.get(process, 'env.RICH_EMBED') === 'true' || false;
+  _.get(process, 'env.BROADCASTER_ONLY', false) === 'true';
+const MODS_ONLY = _.get(process, 'env.MODS_ONLY', false) === 'true';
+const SUBS_ONLY = _.get(process, 'env.SUBS_ONLY', false) === 'true';
+const RICH_EMBED = _.get(process, 'env.RICH_EMBED', false) === 'true';
 
 //Initialize logger
 const logger = createLogger({
@@ -77,11 +78,11 @@ function logStartInfo() {
     `Twitch Client ID is ${TWITCH_CLIENT_ID ? '' : 'NOT '}set`,
   );
 
-  createTmiClient();
+  createTwitchClient();
 }
 
-function createTmiClient() {
-  const tmiOptions = {
+function createTwitchClient() {
+  const twitchClientOptions = {
     options: {
       debug: _.get(process, 'env.LOG_LEVEL') === 'debug' || false,
     },
@@ -91,7 +92,7 @@ function createTmiClient() {
     channels: TWITCH_CHANNELS,
   };
 
-  const client = new tmi.client(tmiOptions);
+  const client = new TwitchJS.client(twitchClientOptions);
 
   // Check messages that are posted in twitch chat
   client.on('message', (channel, userstate, message, self) => {
@@ -345,9 +346,47 @@ function postToDiscord({ content, clipId, clipInfo }) {
 
 function buildMessage({ userInfo, broadcasterInfo, gameInfo, clipInfo }) {
   if (!RICH_EMBED) {
-    const string = `*${clipInfo.title}*\n**${userInfo.display_name}** created a clip of **${broadcasterInfo.display_name}** playing __${gameInfo.name}__\n${clipInfo.url}`;
+    let playingStr = '';
+    if (gameInfo) playingStr = ` playing __${gameInfo.name}__`;
+    const string = `*${clipInfo.title}*\n**${userInfo.display_name}** created a clip of **${broadcasterInfo.display_name}**${playingStr}\n${clipInfo.url}`;
     return string;
   } else {
+    if (gameInfo) {
+      return {
+        content: '',
+        embeds: [
+          {
+            title: clipInfo.title,
+            url: clipInfo.url,
+            color: 9442302,
+            timestamp: clipInfo.created_at,
+            thumbnail: {
+              url: gameInfo.box_art_url
+                .replace('{height}', '80')
+                .replace('{width}', '80'),
+            },
+            author: {
+              name: userInfo.display_name,
+              url: `https://www.twitch.tv/${userInfo.login}`,
+              icon_url: userInfo.profile_image_url,
+            },
+            fields: [
+              {
+                name: 'Channel',
+                value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${broadcasterInfo.login})`,
+                inline: true,
+              },
+              {
+                name: 'Game',
+                value: gameInfo.name || '',
+                inline: true,
+              },
+            ],
+          },
+        ],
+      };
+    }
+    // Fallback to less information if no gameInfo is set on clip
     return {
       content: '',
       embeds: [
@@ -356,11 +395,6 @@ function buildMessage({ userInfo, broadcasterInfo, gameInfo, clipInfo }) {
           url: clipInfo.url,
           color: 9442302,
           timestamp: clipInfo.created_at,
-          thumbnail: {
-            url: gameInfo.box_art_url
-              .replace('{height}', '80')
-              .replace('{width}', '80'),
-          },
           author: {
             name: userInfo.display_name,
             url: `https://www.twitch.tv/${userInfo.login}`,
@@ -370,11 +404,6 @@ function buildMessage({ userInfo, broadcasterInfo, gameInfo, clipInfo }) {
             {
               name: 'Channel',
               value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${broadcasterInfo.login})`,
-              inline: true,
-            },
-            {
-              name: 'Game',
-              value: gameInfo.name || '',
               inline: true,
             },
           ],
