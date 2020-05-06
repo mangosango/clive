@@ -4,7 +4,8 @@
 
 He's a very simple bot that monitors Twitch chat for clips and auto-posts them to Discord.
 
-_**Like this!**_  
+_**Like this!**_
+
 <img src="https://i.imgur.com/N1CFDLD.png" title="Rich Discord Example" />
 
 He runs on a diet of [nodejs](https://nodejs.org/en/) and [tmi.js](https://docs.tmijs.org/v1.2.1/index.html). He needs to live on a server (Like an [Amazon EC2 instance](https://aws.amazon.com/getting-started/tutorials/launch-a-virtual-machine/)). I use a [Pocket C.H.I.P.](https://getchip.com/pages/pocketchip) to host Clive.
@@ -13,17 +14,17 @@ He runs on a diet of [nodejs](https://nodejs.org/en/) and [tmi.js](https://docs.
 
 ## 🤖 Instructions (OSX/Linux)
 
-Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or later is installed. You will also need a [webhook](https://support.discordapp.com/hc/en-us/articles/228383668-Intro-to-Webhooks) for the Discord channel where these clips will be posted.
+Before starting, make sure [nodejs](https://nodejs.org/en/download/) v12 or later is installed. You will also need a [webhook](https://support.discordapp.com/hc/en-us/articles/228383668-Intro-to-Webhooks) for the Discord channel where these clips will be posted.
 
-1.  Open terminal.
-2.  Navigate to a directory (like `~/Developer`).
-3.  Run `git clone https://github.com/mangosango/Clive.git && cd Clive`.
-4.  Run `npm install`
-5.  Copy `.env-exmaple` to `.env`\*
-6.  Open `.env` in a text editor (like [atom](https://atom.io/)).
-7.  Refer to the settings flags below.
-8.  Save `.env`.
-9.  In terminal, run `npm start`.
+1. Open terminal.
+2. Navigate to a directory (like `~/Developer`).
+3. Run `git clone https://github.com/mangosango/Clive.git && cd Clive`.
+4. Run `npm install`
+5. Copy `.env-exmaple` to `.env`\*
+6. Open `.env` in a text editor (like [atom](https://atom.io/)).
+7. Refer to the settings flags below.
+8. Save `.env`.
+9. In terminal, run `npm start`.
 10. ???
 11. Profit.
 
@@ -74,8 +75,8 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v8.9.0 or l
 
 ## 👯 Contributing
 
-1.  Create your own feature branch (using `git checkout -b ...` or whatever you want to use).
-2.  Write some nice code. Commit it! Push it!
-3.  Use Github's excellent pull request feature to submit a PR.
-4.  Someone will review your PR and merge to master!
-5.  Yay.
+1. Create your own feature branch (using `git checkout -b ...` or whatever you want to use).
+2. Write some nice code. Commit it! Push it!
+3. Use Github's excellent pull request feature to submit a PR.
+4. Someone will review your PR and merge to master!
+5. Yay.

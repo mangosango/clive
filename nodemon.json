@@ -1,0 +1,3 @@
+{
+  "ignore": ["*.log", "db.json", "readme.md"]
+}
