@@ -1,11 +1,17 @@
 "use strict";
 require("dotenv").config();
+
+// Init Twitch-JS
+const TwitchJs = require('twitch-js').default;
+const { chat } = new TwitchJs({});
+
+// console.info(TwitchJs);
+
 // Imports
 const _ = require("lodash");
 const FileSync = require("lowdb/adapters/FileSync");
 const lowdb = require("lowdb");
 const request = require("request-promise");
-const tmi = require("tmi.js");
 const { URL } = require("url");
 const { createLogger, format, transports } = require("winston");
 
@@ -86,87 +92,75 @@ function logStartInfo() {
 }
 
 function createTwitchClient() {
-  const twitchClientOptions = {
-    options: {
-      debug: _.get(process, "env.LOG_LEVEL") === "debug" || false,
-    },
-    connection: {
-      reconnect: true,
-      secure: true,
-    },
-    channels: TWITCH_CHANNELS,
-  };
+  chat.connect().then(globalUserState => {
+    Promise.all(TWITCH_CHANNELS.map(channel => chat.join(channel))).then(channelStates => {
+      // Listen to private messages from #dallas and #ronni
+      chat.on('PRIVMSG', message => {
+        const self = message.isSelf;
+        const isBroadcaster = message.tags.badges.broadcaster == '1';
+        const isMod = message.tags.mod == '1';
+        const isSub = message.tags.subscriber == '1';
+        const chatMessage = message.message;
+        
+        // const debugMessage = {
+        //   message.channel,
+        //   message.tags,
+        //   message.message,
+        // };
+        logger.log("debug", "NEW MESSAGE:\n", message);
 
-  const client = new tmi.Client(twitchClientOptions);
-
-  // Check messages that are posted in twitch chat
-  client.on("message", (channel, userstate, message, self) => {
-    const debugMessage = {
-      channel,
-      userstate,
-      message,
-    };
-    logger.log("debug", "NEW MESSAGE:\n", debugMessage);
-
-    // Don't listen to my own messages..
-    if (self) return;
-    // Broadcaster only mode
-    const isBroadcaster = _.get(userstate, "[badges].broadcaster") === "1";
-    if (BROADCASTER_ONLY && !isBroadcaster) {
-      logger.log("info", `NON-BROADCASTER posted a clip: ${message}`);
-      return;
-    }
-    // Mods only mode
-    if (MODS_ONLY && !(userstate["mod"] || isBroadcaster)) {
-      logger.log("info", `NON-MOD posted a clip: ${message}`);
-      return;
-    }
-    // Subs only mode
-    if (SUBS_ONLY && !userstate["subscriber"]) {
-      logger.log("info", `NON-SUB posted a clip: ${message}`);
-      return;
-    }
-
-    // Handle different message types..
-    switch (userstate["message-type"]) {
-      case "action":
-        // This is an action message..
-        break;
-      case "chat":
-        if (CLIPS_REGEX.test(message)) {
-          logger.log("debug", `CLIP DETECTED: in message: ${message}`);
-          const clipId = getUrlSlug(message);
-          // check if its this clip has already been shared
-          const postedClip = checkDbForClip(clipId);
-          if (postedClip) {
-            logger.log(
-              "info",
-              `PREVIOUSLY SHARED CLIP: ${clipId} was pushed to Discord on ${new Date(
-                postedClip.date,
-              )}`,
-            );
-            return;
-          }
-          // If we have a client ID we can use the Twitch API
-          if (TWITCH_CLIENT_ID) {
-            postUsingTwitchAPI(clipId);
-          } else {
-            // Fallback to dumb method of posting
-            postUsingMessageInfo({ clipId, userstate });
-          }
+        // Don't listen to my own messages..
+        if (self) return;
+        // Broadcaster only mode
+        if (BROADCASTER_ONLY && !isBroadcaster) {
+          logger.log("info", `NON-BROADCASTER posted a clip: ${chatMessage}`);
+          return;
         }
-        break;
-      case "whisper":
-        // This is a whisper..
-        break;
-      default:
-        // Something else ?
-        break;
-    }
-  });
+        // Mods only mode
+        if (MODS_ONLY && !(isMod || isBroadcaster)) {
+          logger.log("info", `NON-MOD posted a clip: ${chatMessage}`);
+          return;
+        }
+        // Subs only mode
+        if (SUBS_ONLY && !isSub) {
+          logger.log("info", `NON-SUB posted a clip: ${chatMessage}`);
+          return;
+        }
 
-  // Connect the client to the server..
-  client.connect();
+        // Handle different message types..
+        switch (message.event) {
+          case "PRIVMSG":
+            if (CLIPS_REGEX.test(chatMessage)) {
+              logger.log("debug", `CLIP DETECTED: in message: ${chatMessage}`);
+              const clipId = getUrlSlug(chatMessage);
+              // check if its this clip has already been shared
+              const postedClip = checkDbForClip(clipId);
+              if (postedClip) {
+                logger.log(
+                  "info",
+                  `PREVIOUSLY SHARED CLIP: ${clipId} was pushed to Discord on ${new Date(
+                    postedClip.date,
+                  )}`,
+                );
+                return;
+              }
+              // If we have a client ID we can use the Twitch API
+              if (TWITCH_CLIENT_ID) {
+                postUsingTwitchAPI(clipId);
+              } else {
+                // Fallback to dumb method of posting
+                let displayName = message.tags.displayName;
+                postUsingMessageInfo({ clipId, displayName });
+              }
+            }
+            break;
+          default:
+            // Something else ?
+            break;
+        }
+      });
+    })
+  });
 }
 
 function postUsingTwitchAPI(clipId) {
@@ -203,9 +197,9 @@ function postUsingTwitchAPI(clipId) {
   });
 }
 
-function postUsingMessageInfo({ clipId, userstate }) {
+function postUsingMessageInfo({ clipId, displayName }) {
   const clipUrl = `https://clips.twitch.tv/${clipId}`;
-  const content = `**${userstate["display-name"]}** posted a clip: ${clipUrl}`;
+  const content = `**${displayName}** posted a clip: ${clipUrl}`;
   postToDiscord({ content, clipId });
 }
 

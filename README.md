@@ -8,7 +8,7 @@ _**Like this!**_
 
 <img src="https://i.imgur.com/N1CFDLD.png" title="Rich Discord Example" />
 
-He runs on a diet of [nodejs](https://nodejs.org/en/) and [tmi.js](https://docs.tmijs.org/v1.2.1/index.html). He needs to live on a server (Like an [Amazon EC2 instance](https://aws.amazon.com/getting-started/tutorials/launch-a-virtual-machine/)). I use a [Pocket C.H.I.P.](https://getchip.com/pages/pocketchip) to host Clive.
+He runs on a diet of [nodejs](https://nodejs.org/en/) and [twitch-js](https://twitch-js.netlify.app/). He needs to live on a server (Like an [Amazon EC2 instance](https://aws.amazon.com/getting-started/tutorials/launch-a-virtual-machine/)). I use a [Pocket C.H.I.P.](https://getchip.com/pages/pocketchip) to host Clive.
 
 **Some assembly required (it helps to be familiar with node).**
 
