@@ -25,6 +25,7 @@ const TWITCH_CHANNELS = generateChannelList(
 );
 const DB_FILE = _.get(process, "env.DB_FILE") || "db.json";
 const TWITCH_CLIENT_ID = _.get(process, "env.TWITCH_CLIENT_ID") || null;
+const TWITCH_CLIENT_SECRET = _.get(process, "env.TWITCH_CLIENT_SECRET") || null;
 const RESTRICT_CHANNELS =
   _.get(process, "env.RESTRICT_CHANNELS", true) === "true";
 const BROADCASTER_ONLY =
@@ -36,6 +37,10 @@ const RICH_EMBED = _.get(process, "env.RICH_EMBED", false) === "true";
 // (twitch.tv\/.*\/clip) check https://www.twitch.tv/username/clip/clip_id
 // (clips.twitch.tv) checks https://clips.twitch.tv/clip_id
 const CLIPS_REGEX = /(twitch.tv\/.*\/clip)|(clips.twitch.tv)\/\w+/i;
+
+// Application token, to be fetched async via getAppToken
+var APP_TOKEN = null; 
+getAppToken();
 
 //Initialize logger
 const logger = createLogger({
@@ -56,7 +61,8 @@ if (process.env.NODE_ENV !== "production") {
   );
 }
 
-// If we have a twitch client ID and you want to restrict postings of clips to only those channels Clive is watching
+// If we have a twitch client ID and you want to restrict postings of clips to 
+// only those channels Clive is watching
 // Do a one-time lookup of twitch login names to IDs
 let TWITCH_CHANNEL_IDS = [];
 if (TWITCH_CLIENT_ID && RESTRICT_CHANNELS) {
@@ -102,13 +108,8 @@ function createTwitchClient() {
         const isSub = message.tags.subscriber == '1';
         const chatMessage = message.message;
         
-        // const debugMessage = {
-        //   message.channel,
-        //   message.tags,
-        //   message.message,
-        // };
-        logger.log("debug", "NEW MESSAGE:\n", message);
-
+        // logger.log("debug", "NEW MESSAGE:\n", message);
+        
         // Don't listen to my own messages..
         if (self) return;
         // Broadcaster only mode
@@ -194,6 +195,8 @@ function postUsingTwitchAPI(clipId) {
       logger.log("debug", "DEBUG: generated rich embed", content);
       postToDiscord({ content, clipId, clipInfo });
     });
+  }).catch((e) => {
+    logger.log("error", `ERROR: GET twitch API:`, e);
   });
 }
 
@@ -237,15 +240,36 @@ function insertClipIdToDb(clipId) {
     .write();
 }
 
+function getAppToken() {
+  const options = {
+    method: 'POST',
+    uri: `https://id.twitch.tv/oauth2/token`,
+    qs: {
+      client_id: TWITCH_CLIENT_ID,
+      client_secret: TWITCH_CLIENT_SECRET,
+      grant_type: "client_credentials",
+    },
+    json: true,
+  };
+  request(options)
+    .then((response) => {
+      APP_TOKEN = response.access_token;
+    })
+    .catch((e) => {
+      logger.log("error", `ERROR: POST twitch API @ https://id.twitch.tv/oauth2/token:`, e);
+    });
+}
+
 async function twitchApiGetCall(endpoint, id) {
   if (!TWITCH_CLIENT_ID) return;
   const options = {
     uri: `https://api.twitch.tv/helix/${endpoint}`,
     qs: {
-      id: id,
+      id: id
     },
     headers: {
       "Client-ID": TWITCH_CLIENT_ID,
+      "Authorization": `Bearer ${APP_TOKEN}`
     },
     json: true,
   };
@@ -255,7 +279,8 @@ async function twitchApiGetCall(endpoint, id) {
     return response.data[0];
   } catch (err) {
     logger.log("error", `ERROR: GET twitch API /${endpoint}:`, err);
-    return;
+    console.error(`ERROR: GET twitch API /${endpoint}: ${err}`);
+    return err;
   }
 }
 
@@ -270,6 +295,7 @@ async function resolveTwitchUsernamesToIds(usernames) {
       },
       headers: {
         "Client-ID": TWITCH_CLIENT_ID,
+        "Authorization": `Bearer ${APP_TOKEN}`
       },
       json: true,
     };
@@ -279,7 +305,7 @@ async function resolveTwitchUsernamesToIds(usernames) {
       return response.data[0].id;
     } catch (err) {
       logger.log("error", `ERROR: GET twitch API /users:`, err);
-      return;
+      return err;
     }
   });
   return await Promise.all(usernameFuncs).then((userIds) => userIds);

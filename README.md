@@ -48,6 +48,8 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v12 or late
   - Set the channels you want Clive to monitor for clips. These are also used for `RESTRICT_CHANNELS` If you wanted to watch for clips in `Monstercat`'s chat, you would use `"monstercat"`. If you wanted to monitor multiple channels, you would use `"monstercat mrchowderclam updownleftdie"`.
 - `TWITCH_CLIENT_ID` (optional, suggested) \[null]
   - Needed for Twitch API functionality. This allows Clive to get more data about the clip for its messages! More info: [Twitch Dev Getting Started](https://dev.twitch.tv/get-started)
+- `TWITCH_CLIENT_SECRET` (optional, suggested) \[null]
+  - Needed along with the client ID for Twitch API functionality. This allows Clive to get more data about the clip for its messages! More info: [Twitch Dev Getting Started](https://dev.twitch.tv/get-started)
 - `RESTRICT_CHANNELS` (optional) \[true]
   - **REQUIRES**: `TWITCH_CLIENT_ID` to be set. If true, only shares clips that are listed in `TWITCH_CHANNELS`.
 - `MODS_ONLY` (optional) \[false]
@@ -64,13 +66,13 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v12 or late
 
 ## 📋 Todo
 
+- Having a UI or hosting this somewhere would be nice.
+- Make clive an actual Discord bot, but that would require actual work lol.
 - ~~Option to only send clips of a certain channel or channels.~~
 - ~~Option to only send clips posted by broadcaster, mods, or subs.~~
 - ~~Set the `DISCORD_WEBHOOK_URL` to pull from an evar or something.~~
 - ~~Track previously posted twitch clips~~
 - ~~Use Discord Rich Embed messages~~
-- Having a UI or hosting this somewhere would be nice.
-- Make clive an actual Discord bot, but that would require actual work lol.
 - ~~MFW the Readme is bigger than the app LUL~~
 
 ## 👯 Contributing
