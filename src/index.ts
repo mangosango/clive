@@ -8,10 +8,17 @@ const chat = new Chat({
   log: { level: 'silent' },
 });
 import { getAppToken } from './auth.js';
+import {
+  BroadcasterInfo,
+  GameInfo,
+  UserInfo,
+  ClipInfo,
+} from './types/Twitch.js';
 
 //Initialize constants
 import config from './config.js';
 import logger from './logger.js';
+import { DiscordMessage, RichEmbedMessage } from './types/DiscordMessage.js';
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const {
   BOT_USERNAME,
@@ -166,7 +173,7 @@ async function main() {
     twitchApiGetCall('clips', clipId)
       .then((res) => {
         logger.log('debug', 'Twitch clip results:', res);
-        const clipInfo = {
+        const clipInfo: ClipInfo = {
           ...res,
           title: res.title.trim(),
         };
@@ -190,9 +197,9 @@ async function main() {
           .then((results) => {
             logger.log('debug', 'DEBUG: Async results:\n', results);
             const content = buildMessage({
-              userInfo: results[0],
-              broadcasterInfo: results[1],
-              gameInfo: results[2],
+              userInfo: results[0] as UserInfo,
+              broadcasterInfo: results[1] as BroadcasterInfo,
+              gameInfo: results[2] as GameInfo,
               clipInfo,
             });
             logger.log('debug', 'DEBUG: generated rich embed', content);
@@ -215,7 +222,7 @@ async function main() {
     displayName: string;
   }) {
     const clipUrl = `https://clips.twitch.tv/${clipId}`;
-    const content = `**${displayName}** posted a clip: ${clipUrl}`;
+    const content = { content: `**${displayName}** posted a clip: ${clipUrl}` };
     postToDiscord({ content, clipId });
   }
 
@@ -324,34 +331,48 @@ async function main() {
     clipId,
     clipInfo,
   }: {
-    content: any;
+    content: DiscordMessage;
     clipId: string;
-    clipInfo?: any;
+    clipInfo?: ClipInfo;
   }) {
-    let body: any = {};
-    if (typeof content === 'object') {
-      body = content;
-    } else {
-      body = { content };
-    }
-    body.username = BOT_USERNAME;
-    body.avatar_url = URL_AVATAR;
+    // type Body =
+    //   | (DiscordMessage & {
+    //       username?: string;
+    //       avatar_url?: string;
+    //     })
+    //   | ({ content: string } & {
+    //       username?: string;
+    //       avatar_url?: string;
+    //     });
 
+    type DiscordBotInfo = {
+      username?: string;
+      avatar_url?: string;
+    };
+
+    const data: DiscordMessage & DiscordBotInfo = {
+      ...content,
+      username: BOT_USERNAME,
+      avatar_url: URL_AVATAR,
+    };
     const options = {
       method: 'POST',
       url: DISCORD_WEBHOOK_URL,
-      data: body,
+      data,
     };
 
-    if (RICH_EMBED && APP_TOKEN) {
-      const videoOptions = structuredClone(options);
-      delete videoOptions.data.embeds;
-      videoOptions.data.content = `*${clipInfo.title}*\n${clipInfo.url}`;
-      logger.log('debug', 'POST: 1 of 2 requests with options', videoOptions);
-
+    if (RICH_EMBED && clipInfo) {
+      const initialMessage = {
+        method: options.method,
+        url: options.url,
+        data: {
+          content: `*${clipInfo.title}*\n${clipInfo.url}`,
+        },
+      };
+      logger.log('debug', 'POST: 1 of 2 requests with options', initialMessage);
       // ensure order of the posts, nest the promises
       axios
-        .request(videoOptions)
+        .request(initialMessage)
         .then((response) => {
           if (response.status === 204) {
             logger.log('debug', 'POST: 2 of 2 requests with body', options);
@@ -390,54 +411,19 @@ async function main() {
     gameInfo,
     clipInfo,
   }: {
-    userInfo: any;
-    broadcasterInfo: any;
-    gameInfo: any;
-    clipInfo: any;
-  }) {
+    userInfo: UserInfo;
+    broadcasterInfo: BroadcasterInfo;
+    gameInfo: GameInfo;
+    clipInfo: ClipInfo;
+  }): DiscordMessage {
     if (!RICH_EMBED) {
       let playingStr = '';
+      // underscores, and asterisks on the next two lines are Discord markdown formatting
       if (gameInfo) playingStr = ` playing __${gameInfo.name}__`;
       const string = `*${clipInfo.title}*\n**${userInfo.display_name}** created a clip of **${broadcasterInfo.display_name}**${playingStr}\n${clipInfo.url}`;
-      return string;
+      return { content: string };
     } else {
-      if (gameInfo) {
-        return {
-          content: '',
-          embeds: [
-            {
-              title: clipInfo.title,
-              url: clipInfo.url,
-              color: 9442302,
-              timestamp: clipInfo.created_at,
-              thumbnail: {
-                url: gameInfo.box_art_url
-                  .replace('{height}', '80')
-                  .replace('{width}', '80'),
-              },
-              author: {
-                name: userInfo.display_name,
-                url: `https://www.twitch.tv/${userInfo.login}`,
-                icon_url: userInfo.profile_image_url,
-              },
-              fields: [
-                {
-                  name: 'Channel',
-                  value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${broadcasterInfo.login})`,
-                  inline: true,
-                },
-                {
-                  name: 'Game',
-                  value: gameInfo.name || '',
-                  inline: true,
-                },
-              ],
-            },
-          ],
-        };
-      }
-      // Fallback to less information if no gameInfo is set on clip
-      return {
+      const richEmbedMessage: RichEmbedMessage = {
         content: '',
         embeds: [
           {
@@ -460,6 +446,21 @@ async function main() {
           },
         ],
       };
+
+      // If we have gameInfo, add enhance embed message
+      if (gameInfo) {
+        richEmbedMessage.embeds[0].thumbnail = {
+          url: gameInfo.box_art_url
+            .replace('{height}', '80')
+            .replace('{width}', '80'),
+        };
+        richEmbedMessage.embeds[0].fields.push({
+          name: 'Game',
+          value: gameInfo.name || '',
+          inline: true,
+        });
+      }
+      return richEmbedMessage;
     }
   }
 }
