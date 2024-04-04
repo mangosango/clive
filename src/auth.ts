@@ -1,10 +1,10 @@
-const request = require('request-promise');
-const logger = require('./logger');
+import axios from 'axios';
+import logger from './logger.js';
 
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 
-async function getAppToken() {
+export async function getAppToken() {
   if (!TWITCH_CLIENT_ID || !TWITCH_CLIENT_SECRET) {
     logger.log(
       'error',
@@ -13,18 +13,18 @@ async function getAppToken() {
     return null;
   }
   const options = {
-    method: 'POST',
-    uri: `https://id.twitch.tv/oauth2/token`,
-    qs: {
+    method: 'post',
+    url: `https://id.twitch.tv/oauth2/token`,
+    params: {
       client_id: TWITCH_CLIENT_ID,
       client_secret: TWITCH_CLIENT_SECRET,
       grant_type: 'client_credentials',
     },
-    json: true,
   };
-  return request(options)
+  return axios
+    .request(options)
     .then((response) => {
-      return response.access_token;
+      return response.data.access_token;
     })
     .catch((e) => {
       logger.log(
@@ -34,7 +34,3 @@ async function getAppToken() {
       );
     });
 }
-
-module.exports = {
-  getAppToken,
-};

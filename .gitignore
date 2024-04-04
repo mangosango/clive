@@ -1,5 +1,5 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -60,7 +60,6 @@ typings/
 #database
 db.json
 
-# Covers JetBrains IDEs
-.idea
+# build directories
 out/
-.vscode/
+build/
