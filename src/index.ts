@@ -335,16 +335,6 @@ async function main() {
     clipId: string;
     clipInfo?: ClipInfo;
   }) {
-    // type Body =
-    //   | (DiscordMessage & {
-    //       username?: string;
-    //       avatar_url?: string;
-    //     })
-    //   | ({ content: string } & {
-    //       username?: string;
-    //       avatar_url?: string;
-    //     });
-
     type DiscordBotInfo = {
       username?: string;
       avatar_url?: string;
@@ -447,7 +437,7 @@ async function main() {
         ],
       };
 
-      // If we have gameInfo, add enhance embed message
+      // Enhance embed message with game info
       if (gameInfo) {
         richEmbedMessage.embeds[0].thumbnail = {
           url: gameInfo.box_art_url
