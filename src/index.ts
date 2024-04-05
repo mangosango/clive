@@ -17,7 +17,7 @@ import {
 import config from './config.js';
 import logger from './logger.js';
 import { DiscordMessage, RichEmbedMessage } from './types/DiscordMessage.js';
-import { Database } from './types/Database.js';
+import { Database, StoredClipInfo } from './types/Database.js';
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const {
   BOT_USERNAME,
@@ -37,7 +37,7 @@ const {
 const CLIPS_REGEX = /(twitch.tv\/.*\/clip)|(clips.twitch.tv)\/[\w-]+/i;
 
 main();
-async function main() {
+async function main(): Promise<void> {
   // Application token, to be fetched async via getAppToken
   const APP_TOKEN = await getAppToken();
   // If we have a twitch client ID and you want to restrict postings of clips to
@@ -60,7 +60,7 @@ async function main() {
   const defaultData: Database = { postedClipIds: [] };
   const db = await JSONFilePreset<Database>(DB_FILE, defaultData);
 
-  function logStartInfo() {
+  function logStartInfo(): void {
     logger.log('debug', 'CONFIG SETTINGS:\n', {
       DISCORD_WEBHOOK_URL,
       DB_FILE,
@@ -71,12 +71,12 @@ async function main() {
       MODS_ONLY,
       SUBS_ONLY,
     });
-    logger.log('debug', `Twitch App Token is ${APP_TOKEN ? '' : 'NOT '}set`);
+    logger.log('debug', `Twitch App Token IS ${APP_TOKEN ? '' : 'NOT '}set`);
 
     createTwitchClient();
   }
 
-  function createTwitchClient() {
+  function createTwitchClient(): void {
     chat
       .connect()
       .then(() => {
@@ -162,7 +162,7 @@ async function main() {
       });
   }
 
-  function postUsingTwitchAPI(clipId: string) {
+  function postUsingTwitchAPI(clipId: string): void {
     twitchApiGetCall('clips', clipId)
       .then((res) => {
         logger.log('debug', 'Twitch clip results:', res);
@@ -213,7 +213,7 @@ async function main() {
   }: {
     clipId: string;
     displayName: string;
-  }) {
+  }): void {
     const clipUrl = `https://clips.twitch.tv/${clipId}`;
     const content = { content: `**${displayName}** posted a clip: ${clipUrl}` };
     postToDiscord({ content, clipId });
@@ -240,18 +240,22 @@ async function main() {
     return clipId;
   }
 
-  function checkDbForClip(clipId: string) {
+  function checkDbForClip(clipId: string): StoredClipInfo | undefined {
     const { postedClipIds } = db.data;
     return postedClipIds.find((postedClip) => postedClip.id === clipId);
   }
 
-  function insertClipIdToDb(clipId: string) {
+  function insertClipIdToDb(clipId: string): void {
+    if (!clipId) {
+      logger.log('error', 'No clipId was passed when inserting to database!');
+      return;
+    }
     db.update(({ postedClipIds }) =>
       postedClipIds.push({ id: clipId, date: Date.now() }),
     );
   }
 
-  async function twitchApiGetCall(endpoint: string, id: string) {
+  async function twitchApiGetCall(endpoint: string, id: string): Promise<any> {
     if (!APP_TOKEN) return;
     const options = {
       url: `https://api.twitch.tv/helix/${endpoint}`,
@@ -327,7 +331,7 @@ async function main() {
     content: DiscordMessage;
     clipId: string;
     clipInfo?: ClipInfo;
-  }) {
+  }): void {
     type DiscordBotInfo = {
       username?: string;
       avatar_url?: string;

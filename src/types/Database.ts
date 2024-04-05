@@ -1,6 +1,8 @@
 export type Database = {
-  postedClipIds: {
-    id: string;
-    date: number;
-  }[];
+  postedClipIds: StoredClipInfo[];
+};
+
+export type StoredClipInfo = {
+  id: string;
+  date: number;
 };

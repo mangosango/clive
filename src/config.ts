@@ -1,5 +1,5 @@
 // Takes space-separated string of twitch channels parses them, adds a # prefix, and puts them into an array
-function generateChannelList(channelsString: string) {
+function generateChannelList(channelsString: string): string[] {
   const channelArray = channelsString?.split(' ') || [];
 
   return channelArray.map((channel) => {
