@@ -39,7 +39,7 @@ const CLIPS_REGEX = /(twitch.tv\/.*\/clip)|(clips.twitch.tv)\/[\w-]+/i;
 main();
 async function main() {
   // Application token, to be fetched async via getAppToken
-  var APP_TOKEN = await getAppToken();
+  const APP_TOKEN = await getAppToken();
   // If we have a twitch client ID and you want to restrict postings of clips to
   // only those channels Clive is watching
   // Do a one-time lookup of twitch login names to IDs
@@ -344,37 +344,8 @@ async function main() {
       data,
     };
 
-    if (RICH_EMBED && clipInfo) {
-      const initialMessage = {
-        method: options.method,
-        url: options.url,
-        data: {
-          content: `*${clipInfo.title}*\n${clipInfo.url}`,
-        },
-      };
-      logger.log('debug', 'POST: 1 of 2 requests with options', initialMessage);
-      // ensure order of the posts, nest the promises
-      axios
-        .request(initialMessage)
-        .then((response) => {
-          if (response.status === 204) {
-            logger.log('debug', 'POST: 2 of 2 requests with body', options);
-            axios
-              .request(options)
-              .then((response) => {
-                if (response.status === 204) {
-                  insertClipIdToDb(clipId);
-                }
-              })
-              .catch((err) => {
-                logger.log('error', 'ERROR: posting to Discord', err);
-              });
-          }
-        })
-        .catch((err) => {
-          logger.log('error', 'ERROR: posting to Discord', err);
-        });
-    } else {
+    // Post single, simple message to Discord
+    if (!RICH_EMBED || !clipInfo) {
       axios
         .request(options)
         .then((response) => {
@@ -385,7 +356,39 @@ async function main() {
         .catch((err) => {
           logger.log('error', 'ERROR: posting to Discord', err);
         });
+      return;
     }
+
+    // Post message with rich embed content to Discord
+    const initialMessage = {
+      method: options.method,
+      url: options.url,
+      data: {
+        content: `*${clipInfo.title}*\n${clipInfo.url}`,
+      },
+    };
+    logger.log('debug', 'POST: 1 of 2 requests with options', initialMessage);
+    // ensure order of the posts, nest the promises
+    axios
+      .request(initialMessage)
+      .then((response) => {
+        if (response.status === 204) {
+          logger.log('debug', 'POST: 2 of 2 requests with body', options);
+          axios
+            .request(options)
+            .then((response) => {
+              if (response.status === 204) {
+                insertClipIdToDb(clipId);
+              }
+            })
+            .catch((err) => {
+              logger.log('error', 'ERROR: posting to Discord', err);
+            });
+        }
+      })
+      .catch((err) => {
+        logger.log('error', 'ERROR: posting to Discord', err);
+      });
   }
 
   function buildMessage({
@@ -405,45 +408,45 @@ async function main() {
       if (gameInfo) playingStr = ` playing __${gameInfo.name}__`;
       const string = `*${clipInfo.title}*\n**${userInfo.display_name}** created a clip of **${broadcasterInfo.display_name}**${playingStr}\n${clipInfo.url}`;
       return { content: string };
-    } else {
-      const richEmbedMessage: RichEmbedMessage = {
-        content: '',
-        embeds: [
-          {
-            title: clipInfo.title,
-            url: clipInfo.url,
-            color: 9442302,
-            timestamp: clipInfo.created_at,
-            author: {
-              name: userInfo.display_name,
-              url: `https://www.twitch.tv/${userInfo.login}`,
-              icon_url: userInfo.profile_image_url,
-            },
-            fields: [
-              {
-                name: 'Channel',
-                value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${broadcasterInfo.login})`,
-                inline: true,
-              },
-            ],
-          },
-        ],
-      };
-
-      // Enhance embed message with game info
-      if (gameInfo) {
-        richEmbedMessage.embeds[0].thumbnail = {
-          url: gameInfo.box_art_url
-            .replace('{height}', '80')
-            .replace('{width}', '80'),
-        };
-        richEmbedMessage.embeds[0].fields.push({
-          name: 'Game',
-          value: gameInfo.name || '',
-          inline: true,
-        });
-      }
-      return richEmbedMessage;
     }
+
+    const richEmbedMessage: RichEmbedMessage = {
+      content: '',
+      embeds: [
+        {
+          title: clipInfo.title,
+          url: clipInfo.url,
+          color: 9442302,
+          timestamp: clipInfo.created_at,
+          author: {
+            name: userInfo.display_name,
+            url: `https://www.twitch.tv/${userInfo.login}`,
+            icon_url: userInfo.profile_image_url,
+          },
+          fields: [
+            {
+              name: 'Channel',
+              value: `[${broadcasterInfo.display_name}](https://www.twitch.tv/${broadcasterInfo.login})`,
+              inline: true,
+            },
+          ],
+        },
+      ],
+    };
+
+    // Enhance embed message with game info
+    if (gameInfo) {
+      richEmbedMessage.embeds[0].thumbnail = {
+        url: gameInfo.box_art_url
+          .replace('{height}', '80')
+          .replace('{width}', '80'),
+      };
+      richEmbedMessage.embeds[0].fields.push({
+        name: 'Game',
+        value: gameInfo.name || '',
+        inline: true,
+      });
+    }
+    return richEmbedMessage;
   }
 }
