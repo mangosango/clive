@@ -3,7 +3,7 @@
 	"version": "1.1.0",
 	"description": "bot that posts clips posted to twitch chat to discord",
 	"license": "ISC",
-	"exports": "./index.js",
+	"exports": "./build/index.js",
 	"scripts": {
 		"build": "tsc",
 		"start": "npm run build && node build/index.js",
