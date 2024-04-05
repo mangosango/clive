@@ -4,9 +4,7 @@ import { URL } from 'node:url';
 import { JSONFilePreset } from 'lowdb/node';
 // Init Twitch-JS
 import { Chat, UserStateTags } from 'twitch-js';
-const chat = new Chat({
-  log: { level: 'silent' },
-});
+const chat = new Chat({});
 import { getAppToken } from './auth.js';
 import {
   BroadcasterInfo,
@@ -19,6 +17,7 @@ import {
 import config from './config.js';
 import logger from './logger.js';
 import { DiscordMessage, RichEmbedMessage } from './types/DiscordMessage.js';
+import { Database } from './types/Database.js';
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const {
   BOT_USERNAME,
@@ -58,17 +57,11 @@ async function main() {
     logStartInfo();
   }
 
-  type Data = {
-    postedClipIds: {
-      id: string;
-      date: number;
-    }[];
-  };
-  const defaultData: Data = { postedClipIds: [] };
-  const db = await JSONFilePreset<Data>(DB_FILE, defaultData);
+  const defaultData: Database = { postedClipIds: [] };
+  const db = await JSONFilePreset<Database>(DB_FILE, defaultData);
 
   function logStartInfo() {
-    logger.log('info', 'CONFIG SETTINGS:\n', {
+    logger.log('debug', 'CONFIG SETTINGS:\n', {
       DISCORD_WEBHOOK_URL,
       DB_FILE,
       TWITCH_CHANNELS,
@@ -78,7 +71,7 @@ async function main() {
       MODS_ONLY,
       SUBS_ONLY,
     });
-    logger.log('info', `Twitch App Token is ${APP_TOKEN ? '' : 'NOT '}set`);
+    logger.log('debug', `Twitch App Token is ${APP_TOKEN ? '' : 'NOT '}set`);
 
     createTwitchClient();
   }
