@@ -368,7 +368,7 @@ async function main(): Promise<void> {
       method: options.method,
       url: options.url,
       data: {
-        content: `*${clipInfo.title}*\n${clipInfo.url}`,
+        content: `[${clipInfo.title}](${clipInfo.url})`,
       },
     };
     logger.log('debug', 'POST: 1 of 2 requests with options', initialMessage);
@@ -410,7 +410,7 @@ async function main(): Promise<void> {
       let playingStr = '';
       // underscores, and asterisks on the next two lines are Discord markdown formatting
       if (gameInfo) playingStr = ` playing __${gameInfo.name}__`;
-      const string = `*${clipInfo.title}*\n**${userInfo.display_name}** created a clip of **${broadcasterInfo.display_name}**${playingStr}\n${clipInfo.url}`;
+      const string = `[${clipInfo.title}](${clipInfo.url})\n\n*${userInfo.display_name}* created a clip of *${broadcasterInfo.display_name}*${playingStr}`;
       return { content: string };
     }
 
@@ -439,12 +439,14 @@ async function main(): Promise<void> {
     };
 
     // Enhance embed message with game info
-    if (gameInfo) {
+    if (gameInfo?.box_art_url) {
       richEmbedMessage.embeds[0].thumbnail = {
         url: gameInfo.box_art_url
           .replace('{height}', '80')
           .replace('{width}', '80'),
       };
+    }
+    if (gameInfo?.name) {
       richEmbedMessage.embeds[0].fields.push({
         name: 'Game',
         value: gameInfo.name || '',
