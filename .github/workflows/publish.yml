@@ -5,6 +5,9 @@
 name: Publish Docker image
 
 on:
+  push:
+    branches:
+      - "feat/docker"
   workflow_dispatch: # allows manual triggering
   release:
     types: [published]
