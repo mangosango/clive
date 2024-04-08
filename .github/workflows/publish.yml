@@ -33,7 +33,6 @@ jobs:
         uses: docker/build-push-action@v5
         if: ${{ github.event.release.tag_name != '' }}
         with:
-          context: .
           pull: true
           push: true
           tags: ghcr.io/mangosango/clive:latest,ghcr.io/mangosango/clive:${{ github.event.release.tag_name }}
@@ -52,7 +51,6 @@ jobs:
         uses: docker/build-push-action@v5
         if: ${{ github.event.release.tag_name == '' && env.NEW_COMMIT_COUNT > 0  }}
         with:
-          context: .
           pull: true
           push: true
           tags: ghcr.io/mangosango/clive:main
