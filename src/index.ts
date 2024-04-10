@@ -368,7 +368,7 @@ async function main(): Promise<void> {
       method: options.method,
       url: options.url,
       data: {
-        content: `[${clipInfo.title}](${clipInfo.url})`,
+        content: `[__**${clipInfo.title}**__](${clipInfo.url})`,
       },
     };
     logger.log('debug', 'POST: 1 of 2 requests with options', initialMessage);
@@ -410,7 +410,7 @@ async function main(): Promise<void> {
       let playingStr = '';
       // underscores, and asterisks on the next two lines are Discord markdown formatting
       if (gameInfo) playingStr = ` playing __${gameInfo.name}__`;
-      const string = `[${clipInfo.title}](${clipInfo.url})\n\n*${userInfo.display_name}* created a clip of *${broadcasterInfo.display_name}*${playingStr}`;
+      const string = `[__**${clipInfo.title}**__](${clipInfo.url})\n\n*${userInfo.display_name}* created a clip of *${broadcasterInfo.display_name}*${playingStr}`;
       return { content: string };
     }
 
