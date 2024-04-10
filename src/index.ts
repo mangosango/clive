@@ -74,7 +74,7 @@ function logStartInfo(): void {
 
 async function createTwitchChatClient(): Promise<Chat> {
   const chat = new Chat({});
-  const connectedChat = await chat.connect();
+  await chat.connect();
   const allChannels = getAllChannels(config, true);
   await Promise.all(allChannels.map((channel) => chat.join(channel)));
   return chat;
@@ -82,22 +82,17 @@ async function createTwitchChatClient(): Promise<Chat> {
 
 function createChatListeners(chat: Chat) {
   // Listen to private messages
-  chat.on('PRIVMSG', (message) => {
+  chat.on(Commands.PRIVATE_MESSAGE, (message) => {
     logger.log(
       'debug',
       `${JSON.stringify(message)}\n\ttest: ${CLIPS_REGEX.test(message.message)}`,
     );
 
-    console.log(
-      `jdflkajsdlfajdlfjasdfjsalkdjflasjd ${JSON.stringify(message)}\n\ttest: ${CLIPS_REGEX.test(message.message)}`,
-    );
-
-    const self = message.isSelf;
-
     // Don't listen to my own messages..
-    if (self) return;
+    if (message.isSelf) return;
     const discordChannels = getPermittedDiscordConfigs(message, config);
 
+    logger.log('debug', `Discord channels: ${discordChannels}`);
     // Handle different message types..
     switch (message.event) {
       case Commands.PRIVATE_MESSAGE:
@@ -148,14 +143,15 @@ function getPermittedDiscordConfigs(
   config: Config,
 ): DiscordConfig[] {
   return config.discordConfigs.reduce((permittedConfigs, discordConfig) => {
-    const { twitchChannels, permissions } = discordConfig;
+    const { permissions } = discordConfig;
+    const twitchChannels = getAllChannels(config, true);
     const user = message.username;
 
     // Filter all messages for the correct Discord channels
     // Bot can be connected to multiple channels at once and messages come
     //   from all connected channels but may not map to all Discords
     const isWatchedChannel = twitchChannels.some((twitchChannel) => {
-      return twitchChannel.toLowerCase() === message.channel.toLowerCase();
+      return twitchChannel === message.channel.toLowerCase();
     });
     if (!isWatchedChannel) {
       return permittedConfigs;
@@ -196,8 +192,10 @@ function getPermittedDiscordConfigs(
 
     logger.log(
       'info',
-      `No permissions for user: ${user} sharing clip: ${message.message}\n\t
-        Using permission set: ${permissions}`,
+      `No permissions for user: ${user} (${JSON.stringify({ isBroadcaster, isMod, isSub })})
+        \tin discord: ${discordConfig.webhookURL}
+        \tsharing clip: ${message.message}
+        \tUsing permission set: ${JSON.stringify(permissions)}`,
     );
     return permittedConfigs;
   }, [] as DiscordConfig[]);
@@ -306,7 +304,7 @@ function insertClipIdToDb(clipId: string, webhookURL: string): Promise<void> {
   let clipIndex = postedClips.findIndex(
     (postedClip) => postedClip.id === clipId,
   );
-  if (!clipIndex) {
+  if (clipIndex < 0) {
     return DB.update(({ postedClips }) =>
       postedClips.push({
         id: clipId,
