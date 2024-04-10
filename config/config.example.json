@@ -1,7 +1,7 @@
 {
   "logLevel": "error",
-  "logFile": "/var/log/clive.log",
-  "dbFile": "/srv/clive/db.json",
+  "logFile": "./config/logs/clive.log",
+  "dbFile": "./config/db.json",
   "twitchClientId": "",
   "twitchClientSecret": "",
   "permissions": {

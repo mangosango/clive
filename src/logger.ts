@@ -1,8 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 import data from '../config/config.json' with { type: 'json' };
 
-console.log('askdjsakldjaskldjklsajdlasjdlsajkdasjdlskadjas', { data });
-
 //Initialize logger
 const logger = createLogger({
   level: (data as any)?.logLevel || 'error',
