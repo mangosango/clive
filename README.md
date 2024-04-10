@@ -20,8 +20,8 @@ Before starting, make sure [nodejs](https://nodejs.org/en/download/) v12 or late
 2. Navigate to a directory (like `~/Developer`).
 3. Run `git clone https://github.com/mangosango/Clive.git && cd Clive`.
 4. Run `npm install`
-5. Copy `.env-exmaple` to `.env`\*
-6. Open `.env` in a text editor (like [atom](https://atom.io/)).
+5. Copy `.env-example` to `.env`\*
+6. Open `.env` in a text editor (like [Visual Studio Code](https://code.visualstudio.com)).
 7. Refer to the settings flags below.
 8. Save `.env`.
 9. In terminal, run `npm start`.
