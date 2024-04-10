@@ -60,9 +60,10 @@ export default {
  * @returns string[]
  */
 export function getAllChannels(config: Config, withHash = false): string[] {
-  return config.discordConfigs.flatMap((discordConfig) => {
-    return discordConfig.twitchChannels.map(
-      (twitchChannel) => `${withHash ? '#' : ''}${twitchChannel}`,
+  const arrayWithDuplicates = config.discordConfigs.flatMap((discordConfig) => {
+    return discordConfig.twitchChannels.map((twitchChannel) =>
+      `${withHash ? '#' : ''}${twitchChannel}`.toLowerCase(),
     );
   });
+  return [...new Set(arrayWithDuplicates)];
 }
