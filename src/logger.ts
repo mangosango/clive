@@ -1,13 +1,16 @@
 import { createLogger, format, transports } from 'winston';
+import data from '../config/config.json' with { type: 'json' };
+
+console.log('askdjsakldjaskldjklsajdlasjdlsajkdasjdlskadjas', { data });
 
 //Initialize logger
 const logger = createLogger({
-  level: process?.env?.LOG_LEVEL || 'error',
+  level: (data as any)?.logLevel || 'error',
   format: format.combine(format.timestamp(), format.prettyPrint()),
   transports: [
     // - Write to all logs with level `info` and below to `clive.log`
     new transports.File({
-      filename: process?.env?.LOG_FILE || 'clive.log',
+      filename: (data as any)?.logFile || 'clive.log',
     }),
   ],
 });

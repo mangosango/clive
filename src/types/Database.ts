@@ -1,8 +1,11 @@
 export type Database = {
-  postedClipIds: StoredClipInfo[];
+  postedClips: PostedClip[];
 };
 
-export type StoredClipInfo = {
+export type PostedClip = {
   id: string;
-  date: number;
+  discordWebhooks: {
+    url: string;
+    date: number;
+  }[];
 };
