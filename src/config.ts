@@ -1,21 +1,85 @@
-// Takes space-separated string of twitch channels parses them, adds a # prefix, and puts them into an array
-function generateChannelList(channelsString: string): string[] {
-  const channelArray = channelsString?.split(' ') || [];
+import { LoggerOptions } from 'winston';
+import data from '../config/config.json' with { type: 'json' };
 
-  return channelArray.map((channel) => {
-    return `#${channel.toLowerCase()}`;
-  });
-}
+// merge down any global settings to each DiscordConfig
+const discordConfigs: DiscordConfig[] = data.discordConfigs.map(
+  (discordConfig) => {
+    const permissions = (discordConfig as any)?.permissions ||
+      (data as any)?.permissions || {
+        listedChannelsOnly: true,
+        allowEveryone: true,
+      };
+    const useRichEmbed =
+      (discordConfig as any)?.useRichEmbed ||
+      (data as any)?.useRichEmbed ||
+      false;
+    const botUsername =
+      (discordConfig as any)?.botUsername ||
+      (data as any)?.botUserName ||
+      'Clive';
+    const botAvatarURL =
+      (discordConfig as any)?.botAvatarURL ||
+      (data as any)?.botAvatarURL ||
+      'http://i.imgur.com/9s3TBNv.png';
 
-export default {
-  BOT_USERNAME: process?.env?.BOT_USERNAME,
-  BROADCASTER_ONLY: !!(process?.env?.BROADCASTER_ONLY === 'true'),
-  DB_FILE: process?.env?.DB_FILE || 'db.json',
-  DISCORD_WEBHOOK_URL: process?.env?.DISCORD_WEBHOOK_URL,
-  MODS_ONLY: !!(process?.env?.MODS_ONLY === 'true'),
-  RESTRICT_CHANNELS: !!(process?.env?.RESTRICT_CHANNELS === 'true'),
-  RICH_EMBED: !!(process?.env?.RICH_EMBED === 'true'),
-  SUBS_ONLY: !!(process?.env?.SUBS_ONLY === 'true'),
-  TWITCH_CHANNELS: generateChannelList(process?.env?.TWITCH_CHANNELS || ''),
-  URL_AVATAR: process?.env?.URL_AVATAR,
+    return {
+      ...discordConfig,
+      permissions,
+      useRichEmbed,
+      botUsername,
+      botAvatarURL,
+    } as DiscordConfig;
+  },
+);
+
+// merge the updated discordConfigs back into the user's config object
+const config: Config = {
+  ...data,
+  discordConfigs,
 };
+
+// default values for required settings
+const defaultConfig: Config = {
+  logLevel: 'error',
+  logFile: './config/clive.log',
+  dbFile: './config/db.json',
+  discordConfigs: [],
+};
+
+// merge defaults with user's config object
+export default {
+  ...defaultConfig,
+  ...config,
+} as Config;
+
+export type PermissionsConfig = {
+  listedChannelsOnly?: boolean;
+  allowEveryone: boolean;
+  allowFollowers?: boolean;
+  allowVIPs?: boolean;
+  allowSubs?: boolean;
+  allowMods?: boolean;
+  allowBroadcaster?: boolean;
+};
+
+type OverridableConfigs = {
+  permissions: PermissionsConfig;
+  useRichEmbed: boolean;
+  botUsername: string;
+  botAvatarURL: string;
+};
+
+export type DiscordConfig = {
+  webhookURL: string;
+  twitchChannels: string[];
+} & OverridableConfigs;
+
+type ConfigBase = {
+  logLevel?: LoggerOptions['level'];
+  logFile: string;
+  dbFile: string;
+  twitchClientId?: string;
+  twitchClientSecret?: string;
+  discordConfigs: DiscordConfig[];
+};
+export type Config = ConfigBase | (ConfigBase & OverridableConfigs);

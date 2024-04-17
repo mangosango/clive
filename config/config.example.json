@@ -1,0 +1,39 @@
+{
+  "logLevel": "error",
+  "logFile": "./config/logs/clive.log",
+  "dbFile": "./config/db.json",
+  "twitchClientId": "",
+  "twitchClientSecret": "",
+  "permissions": {
+    "watchedChannelsOnly": true,
+    "everyone": true,
+    "mods": true,
+    "broadcaster": true
+  },
+  "useRichEmbed": false,
+  "botUsername": "Clive",
+  "botAvatarURL": "http://i.imgur.com/9s3TBNv.png",
+  "discordConfigs": [
+    {
+      "webhookURL": "https://discordapp.com/api/webhooks/YOUR_DISCORD/WEBHOOK_URL_HERE",
+      "twitchChannels": [
+        "a_twitch_channel",
+        "another_twitch_channel"
+      ]
+    },
+    {
+      "webhookURL": "https://discordapp.com/api/webhooks/A_DIFFERENT_DISCORD_WEBHOOK",
+      "botUsername": "Name Overwrite",
+      "botAvatarURL": "http://i.imgur/a_different_image.png",
+      "permissions": {
+        "everyone": false,
+        "mods": false
+      },
+      "useRichEmbed": true,
+      "twitchChannels": [
+        "a_twitch_channel",
+        "different_channel"
+      ]
+    }
+  ]
+}
