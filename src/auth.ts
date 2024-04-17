@@ -4,7 +4,7 @@ import logger from './logger.js';
 export async function getAppToken(
   twitchClientId: string,
   twitchClientSecret: string,
-): Promise<string | null> {
+): Promise<string | undefined> {
   const options = {
     method: 'post',
     url: `https://id.twitch.tv/oauth2/token`,
@@ -25,5 +25,5 @@ export async function getAppToken(
       err,
     );
   }
-  return null;
+  return;
 }

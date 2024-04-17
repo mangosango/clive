@@ -1,4 +1,4 @@
-import { Config, DiscordConfig } from './types/Config.js';
+import { LoggerOptions } from 'winston';
 import data from '../config/config.json' with { type: 'json' };
 
 // merge down any global settings to each DiscordConfig
@@ -52,18 +52,34 @@ export default {
   ...config,
 } as Config;
 
-/**
- * Collects all twitch channel names from all the Discord config sections and
- * return a list of them with or with out a preceding '#'
- * @param config
- * @param withHash
- * @returns string[]
- */
-export function getAllChannels(config: Config, withHash = false): string[] {
-  const arrayWithDuplicates = config.discordConfigs.flatMap((discordConfig) => {
-    return discordConfig.twitchChannels.map((twitchChannel) =>
-      `${withHash ? '#' : ''}${twitchChannel}`.toLowerCase(),
-    );
-  });
-  return [...new Set(arrayWithDuplicates)];
-}
+export type PermissionsConfig = {
+  listedChannelsOnly?: boolean;
+  allowEveryone: boolean;
+  allowFollowers?: boolean;
+  allowVIPs?: boolean;
+  allowSubs?: boolean;
+  allowMods?: boolean;
+  allowBroadcaster?: boolean;
+};
+
+type OverridableConfigs = {
+  permissions: PermissionsConfig;
+  useRichEmbed: boolean;
+  botUsername: string;
+  botAvatarURL: string;
+};
+
+export type DiscordConfig = {
+  webhookURL: string;
+  twitchChannels: string[];
+} & OverridableConfigs;
+
+type ConfigBase = {
+  logLevel?: LoggerOptions['level'];
+  logFile: string;
+  dbFile: string;
+  twitchClientId?: string;
+  twitchClientSecret?: string;
+  discordConfigs: DiscordConfig[];
+};
+export type Config = ConfigBase | (ConfigBase & OverridableConfigs);
